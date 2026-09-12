@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- Generator: Adobe Illustrator 30.6.0, SVG Export Plug-In . SVG Version: 9.03 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+
+<g id="_x30_2_x5F_Livello_x5F_Logo_x5F_Mark">
+	<g id="Gruppo_x5F_Cubo_x5F_3D">
+		<polygon id="Cubo_x5F_Faccia_x5F_Superiore_x5F_ViolaChiaro" style="fill:#8C63FF;" points="256,186 316.622,221 256,256 
+			195.378,221 		"/>
+		<polygon id="Cubo_x5F_Faccia_x5F_Sinistra_x5F_ViolaMedio" style="fill:#5C2EE8;" points="195.378,221 256,256 256,326 
+			195.378,291 		"/>
+		<polygon id="Cubo_x5F_Faccia_x5F_Destra_x5F_IndacoScuro" style="fill:#3A19AB;" points="256,256 316.622,221 316.622,291 
+			256,326 		"/>
+	</g>
+	<g id="Gruppo_x5F_Cornice_x5F_Viewfinder">
+		
+			<polyline id="Angolare_x5F_Alto_x5F_Sinistra" style="fill:none;stroke:#5F6682;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" points="
+			194,166 166,166 166,194 		"/>
+		
+			<polyline id="Angolare_x5F_Alto_x5F_Destra" style="fill:none;stroke:#5F6682;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" points="
+			318,166 346,166 346,194 		"/>
+		
+			<polyline id="Angolare_x5F_Basso_x5F_Sinistra" style="fill:none;stroke:#5F6682;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" points="
+			166,318 166,346 194,346 		"/>
+		
+			<polyline id="Angolare_x5F_Basso_x5F_Destra" style="fill:none;stroke:#5F6682;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" points="
+			346,318 346,346 318,346 		"/>
+	</g>
+	<g id="Gruppo_x5F_Nodo_x5F_Superiore_x5F_VerdeTeal">
+		
+			<line id="Linea_x5F_Tratto_x5F_Attaccato_x5F_Solido" style="fill:none;stroke:#00E5A3;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="256" y1="170" x2="256" y2="159"/>
+		
+			<line id="Linea_x5F_Tratteggio_x5F_1" style="fill:none;stroke:#00E5A3;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="256" y1="146" x2="256" y2="135"/>
+		
+			<line id="Linea_x5F_Tratteggio_x5F_2" style="fill:none;stroke:#00E5A3;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="256" y1="122" x2="256" y2="108"/>
+		<circle id="Punto_x5F_Nodo_x5F_VerdeTeal" style="fill:#00E5A3;" cx="256" cy="98" r="10"/>
+	</g>
+	<g id="Gruppo_x5F_Nodo_x5F_Sinistro_x5F_RossoCoral">
+		
+			<line id="Linea_x5F_Tratto_x5F_Attaccato_x5F_Solido_00000113324636484716135670000002172166484517956784_" style="fill:none;stroke:#FF5B4E;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="170" y1="256" x2="159" y2="256"/>
+		
+			<line id="Linea_x5F_Tratteggio_x5F_1_00000108274995577889806310000011868578420421060503_" style="fill:none;stroke:#FF5B4E;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="146" y1="256" x2="135" y2="256"/>
+		
+			<line id="Linea_x5F_Tratteggio_x5F_2_00000140005429540145388540000009141681768440458175_" style="fill:none;stroke:#FF5B4E;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="122" y1="256" x2="108" y2="256"/>
+		<circle id="Punto_x5F_Nodo_x5F_RossoCoral" style="fill:#FF5B4E;" cx="98" cy="256" r="10"/>
+	</g>
+	<g id="Gruppo_x5F_Nodo_x5F_Destro_x5F_BluElettrico">
+		
+			<line id="Linea_x5F_Tratto_x5F_Attaccato_x5F_Solido_00000168797476522579003820000009119578328805931703_" style="fill:none;stroke:#0075FF;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="342" y1="256" x2="353" y2="256"/>
+		
+			<line id="Linea_x5F_Tratteggio_x5F_1_00000125571673131048081430000011825741314081708968_" style="fill:none;stroke:#0075FF;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="366" y1="256" x2="377" y2="256"/>
+		
+			<line id="Linea_x5F_Tratteggio_x5F_2_00000183966777747287269010000009747053164184010163_" style="fill:none;stroke:#0075FF;stroke-width:6.5;stroke-linecap:round;stroke-miterlimit:10;" x1="390" y1="256" x2="404" y2="256"/>
+		<circle id="Punto_x5F_Nodo_x5F_BluElettrico" style="fill:#0075FF;" cx="414" cy="256" r="10"/>
+	</g>
+</g>
+</svg>
