@@ -1,6 +1,5 @@
 import { EscrowFactoryAbi, MilestoneEscrowAbi, avalancheFujiChainId, deployments } from "@milestonepay/contracts"
 import { createPublicClient, decodeEventLog, http, isAddress, type Address, type Hex, type PublicClient } from "viem"
-import { avalancheFuji } from "viem/chains"
 import type { NormalizedEvent } from "./sync.js"
 
 export const FUJI_DEPLOYMENT_BLOCK = 58_333_416n
@@ -23,13 +22,13 @@ export type AvalancheReader = {
   evidenceHash(escrow: Address, milestoneId: bigint, kind: "milestone" | "dispute-client" | "dispute-provider"): Promise<Hex>
 }
 
-function normalizeLog(log: { address: Address; data: Hex; topics: readonly Hex[]; blockNumber?: bigint; transactionHash?: Hex; transactionIndex?: number; logIndex?: number }, abi: typeof EscrowFactoryAbi | typeof MilestoneEscrowAbi): NormalizedEvent | undefined {
+function normalizeLog(chainId: number, log: { address: Address; data: Hex; topics: readonly Hex[]; blockNumber?: bigint; transactionHash?: Hex; transactionIndex?: number; logIndex?: number }, abi: typeof EscrowFactoryAbi | typeof MilestoneEscrowAbi): NormalizedEvent | undefined {
   try {
     const decoded = decodeEventLog({ abi, data: log.data, topics: log.topics as [Hex, ...Hex[]], strict: true })
     const args = Object.fromEntries(Object.entries(decoded.args).map(([key, value]) => [snake(key), scalar(value)]))
     const escrow = decoded.eventName === "EscrowCreated" ? String(args.escrow) : lower(log.address)
     if (!log.transactionHash || log.blockNumber === undefined || log.logIndex === undefined) return undefined
-    return { chainId: avalancheFujiChainId, txHash: log.transactionHash, logIndex: log.logIndex, transactionIndex: log.transactionIndex ?? 0, blockNumber: Number(log.blockNumber), contract: lower(log.address), eventName: decoded.eventName, escrow, attributes: args }
+    return { chainId, txHash: log.transactionHash, logIndex: log.logIndex, transactionIndex: log.transactionIndex ?? 0, blockNumber: Number(log.blockNumber), contract: lower(log.address), eventName: decoded.eventName, escrow, attributes: args }
   } catch { return undefined }
 }
 
@@ -39,21 +38,21 @@ async function logsInChunks(client: PublicClient, address: Address, fromBlock: b
   return logs
 }
 
-export function createAvalancheReader(options: { rpcUrl?: string; factory?: Address; startBlock?: bigint } = {}): AvalancheReader {
-  const factory = options.factory ?? deployments[avalancheFujiChainId].escrowFactory as Address
-  const client = createPublicClient({ chain: avalancheFuji, transport: http(options.rpcUrl ?? process.env.FUJI_RPC_URL) })
+export function createEvmReader(options: { rpcUrl: string; factory: Address; chainId: number }): AvalancheReader {
+  const { factory, chainId } = options
+  const client = createPublicClient({ transport: http(options.rpcUrl) })
   const stateName = ["created", "active", "disputed", "completed", "cancelled"] as const
   return {
-    chainId: avalancheFujiChainId,
+    chainId,
     factory,
     async readEvents(fromBlock, requestedToBlock, knownEscrows = []) {
       const toBlock = requestedToBlock ?? await client.getBlockNumber()
       const factoryLogs = await logsInChunks(client, factory, fromBlock, toBlock)
-      const events = factoryLogs.map((log) => normalizeLog(log as unknown as Parameters<typeof normalizeLog>[0], EscrowFactoryAbi)).filter((event): event is NormalizedEvent => Boolean(event))
+      const events = factoryLogs.map((log) => normalizeLog(chainId, log as unknown as Parameters<typeof normalizeLog>[1], EscrowFactoryAbi)).filter((event): event is NormalizedEvent => Boolean(event))
       const escrows = [...new Set([...knownEscrows.map(lower) as Address[], ...events.filter((event) => event.eventName === "EscrowCreated").map((event) => event.escrow as Address)])]
       for (const escrow of escrows) {
         const escrowLogs = await logsInChunks(client, escrow, fromBlock, toBlock)
-        events.push(...escrowLogs.map((log) => normalizeLog(log as unknown as Parameters<typeof normalizeLog>[0], MilestoneEscrowAbi)).filter((event): event is NormalizedEvent => Boolean(event)))
+        events.push(...escrowLogs.map((log) => normalizeLog(chainId, log as unknown as Parameters<typeof normalizeLog>[1], MilestoneEscrowAbi)).filter((event): event is NormalizedEvent => Boolean(event)))
       }
       return events.sort((a, b) => a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex || a.logIndex - b.logIndex)
     },
@@ -70,4 +69,8 @@ export function createAvalancheReader(options: { rpcUrl?: string; factory?: Addr
       return kind === "dispute-client" ? dispute.clientEvidenceHash : dispute.providerEvidenceHash
     },
   }
+}
+
+export function createAvalancheReader(options: { rpcUrl?: string; factory?: Address } = {}): AvalancheReader {
+  return createEvmReader({ rpcUrl: options.rpcUrl ?? process.env.FUJI_RPC_URL ?? "", factory: options.factory ?? deployments[avalancheFujiChainId].escrowFactory as Address, chainId: avalancheFujiChainId })
 }

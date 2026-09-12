@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { buildApp } from './app.js'
 import { MemoryArkivRepository } from './arkiv/writer.js'
 import type { AvalancheReader } from './indexer/avalanche.js'
+import { hashEvidenceDescriptor, type EvidenceDescriptorV1 } from '@milestonepay/evidence'
 
 test('health endpoints respond without exposing Arkiv internals', async () => {
   const app = buildApp(async () => 123n)
@@ -45,5 +46,20 @@ test('protocol routes validate public identifiers before external reads', async 
     assert.equal((await app.inject('/evidence/not-a-hash')).statusCode, 400)
     assert.equal((await app.inject('/wallets/not-an-address/history')).statusCode, 400)
     assert.equal((await app.inject('/deals/0x0000000000000000000000000000000000000003')).statusCode, 404)
+  } finally { await app.close() }
+})
+
+test('evidence conflicts and unavailable protocol dependencies have safe errors', async () => {
+  const escrow = '0x0000000000000000000000000000000000000003' as const
+  const descriptor: EvidenceDescriptorV1 = { version: 1, kind: 'milestone', chainId: 43113, escrow, milestoneId: 0, createdAt: 1, act: { encryptedReference: '1'.repeat(64), historyReference: '2'.repeat(64), publisherPublicKey: `0x${'3'.repeat(66)}`, actReference: '4'.repeat(64) } }
+  const hash = hashEvidenceDescriptor(descriptor)
+  const repo = new MemoryArkivRepository('0x0000000000000000000000000000000000000002')
+  await repo.put({ type: 'evidence', attributes: { evidence_hash: hash }, payload: { ...descriptor, createdAt: 2 } })
+  const reader: AvalancheReader = { chainId: 43113, factory: '0x0000000000000000000000000000000000000001', readEvents: async () => [], isEscrow: async () => true, evidenceHash: async () => hash, readEscrow: async () => { throw new Error('unavailable') } }
+  const app = buildApp(async () => 123n, { repo, reader })
+  try {
+    assert.equal((await app.inject({ method: 'POST', url: '/evidence', payload: descriptor })).statusCode, 409)
+    const unavailable = buildApp(async () => 123n, { repo, reader: { ...reader, isEscrow: async () => { throw new Error('upstream') } } })
+    try { assert.equal((await unavailable.inject(`/deals/${escrow}`)).statusCode, 503) } finally { await unavailable.close() }
   } finally { await app.close() }
 })

@@ -11,6 +11,7 @@ COPY apps/api apps/api
 COPY packages/contracts packages/contracts
 COPY packages/evidence packages/evidence
 COPY packages/reputation packages/reputation
+RUN pnpm --filter @milestonepay/evidence build && pnpm --filter @milestonepay/reputation build
 WORKDIR /app/apps/api
 EXPOSE 3001
 CMD ["pnpm", "dev"]
