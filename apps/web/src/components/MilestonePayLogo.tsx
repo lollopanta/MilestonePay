@@ -1,7 +1,7 @@
 interface MilestonePayLogoProps {
-  height?: number | string;
-  width?: number | string;
-  className?: string;
+  height?: number | string
+  width?: number | string
+  className?: string
 }
 
 export function MilestonePayLogo({
@@ -14,9 +14,12 @@ export function MilestonePayLogo({
       src="/logo.svg"
       alt="MilestonePay Logo"
       className={className}
-      style={{ height: typeof height === "number" ? `${height}px` : height, width: typeof width === "number" ? `${width}px` : width }}
+      style={{
+        height: typeof height === "number" ? `${height}px` : height,
+        width: typeof width === "number" ? `${width}px` : width,
+      }}
     />
-  );
+  )
 }
 
-export default MilestonePayLogo;
+export default MilestonePayLogo

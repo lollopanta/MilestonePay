@@ -2,7 +2,12 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import { type Address } from "viem"
 
-import { canApproveMilestone, canSubmitMilestone, formatUsdt, progressPercentage } from "./deal"
+import {
+  canApproveMilestone,
+  canSubmitMilestone,
+  formatUsdt,
+  progressPercentage,
+} from "./deal"
 import { hashEvidenceNote } from "./evidence"
 
 const client = "0x0000000000000000000000000000000000000001" as Address
@@ -31,6 +36,9 @@ test("formats USDT and computes monetary progress without floating point", () =>
 })
 
 test("evidence placeholder is deterministic and never accepts empty input", () => {
-  assert.equal(hashEvidenceNote("Website homepage completed"), hashEvidenceNote("Website homepage completed"))
+  assert.equal(
+    hashEvidenceNote("Website homepage completed"),
+    hashEvidenceNote("Website homepage completed")
+  )
   assert.equal(hashEvidenceNote("   "), undefined)
 })

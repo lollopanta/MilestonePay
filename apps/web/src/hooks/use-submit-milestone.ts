@@ -5,7 +5,7 @@ import { useAccount } from "wagmi"
 import { waitForTransactionReceipt, writeContract } from "wagmi/actions"
 import { avalancheFuji } from "wagmi/chains"
 
-import { hashEvidenceNote } from "@/lib/evidence"
+import { agreementIdentities, getEvidenceClient, registerEvidence } from "@/lib/evidence"
 import { sameAddress } from "@/lib/deal"
 import { transactionError } from "@/lib/transaction-error"
 import { wagmiConfig } from "@/web3/config"
@@ -28,17 +28,29 @@ export function useSubmitMilestone(refetch: () => Promise<unknown>) {
     milestoneId,
     evidenceNote,
   }: SubmitArgs) {
-    const evidenceHash = hashEvidenceNote(evidenceNote)
     if (!wallet || !sameAddress(wallet, provider))
       return setMessage("Only the provider can submit this milestone.")
     if (chainId !== avalancheFuji.id)
       return setMessage("Switch to Avalanche Fuji first.")
-    if (!evidenceHash)
+    if (!evidenceNote.trim())
       return setMessage("Add an evidence note before submitting.")
 
     setIsPending(true)
-    setMessage("Confirm in wallet")
+    setMessage("Protecting evidence with Swarm ACT")
     try {
+      const identities = await agreementIdentities(escrowAddress)
+      const { descriptor, evidenceHash } = await (await getEvidenceClient()).uploadEvidence(
+        new TextEncoder().encode(evidenceNote),
+        {
+          kind: "milestone",
+          chainId: avalancheFuji.id,
+          escrow: escrowAddress,
+          milestoneId: Number(milestoneId),
+          createdAt: Math.floor(Date.now() / 1_000),
+          grantees: [identities.client.binding.identity],
+        }
+      )
+      setMessage("Confirm milestone submission in wallet")
       const hash = await writeContract(wagmiConfig, {
         address: escrowAddress,
         abi: MilestoneEscrowAbi,
@@ -61,7 +73,10 @@ export function useSubmitMilestone(refetch: () => Promise<unknown>) {
         }
       })
       await refetch()
-      setMessage(submitted ? "Milestone submitted" : "Transaction confirmed")
+      if (!submitted) throw new Error("MilestoneSubmitted event missing")
+      setMessage("Registering protected evidence metadata")
+      await registerEvidence(descriptor)
+      setMessage("Milestone submitted with Swarm ACT-protected evidence")
       return hash
     } catch (error) {
       console.error(error)

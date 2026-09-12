@@ -1,11 +1,14 @@
 import { createConfig, http } from "wagmi"
 import { injected } from "wagmi/connectors"
-import { avalancheFuji } from "wagmi/chains"
+import { avalancheFuji, mainnet } from "wagmi/chains"
 
 const rpcUrl = import.meta.env.VITE_AVALANCHE_RPC || undefined
 
 export const wagmiConfig = createConfig({
-  chains: [avalancheFuji],
+  chains: [avalancheFuji, mainnet],
   connectors: [injected()],
-  transports: { [avalancheFuji.id]: http(rpcUrl) },
+  transports: {
+    [avalancheFuji.id]: http(rpcUrl),
+    [mainnet.id]: http(),
+  },
 })

@@ -1,23 +1,91 @@
+import { useState } from "react"
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
 import { avalancheFuji } from "wagmi/chains"
 
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { getSwarmIdClient } from "@/lib/evidence"
 
-const shorten = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`
+type AccountStep = "idle" | "wallet" | "network" | "swarm" | "error"
+const shorten = (address: string) =>
+  `${address.slice(0, 6)}…${address.slice(-4)}`
 
 export function WalletButton() {
   const { address, chainId, isConnected } = useAccount()
-  const { connect, connectors, isPending } = useConnect()
+  const { connectAsync, connectors, isPending: isConnecting } = useConnect()
   const { disconnect } = useDisconnect()
-  const { switchChain, isPending: isSwitching } = useSwitchChain()
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
+  const [step, setStep] = useState<AccountStep>("idle")
+  const [isSwarmConnected, setSwarmConnected] = useState(false)
 
-  if (!isConnected) {
-    return <Button onClick={() => connectors[0] && connect({ connector: connectors[0] })} disabled={isPending}>Connect wallet</Button>
+  async function connectAccount() {
+    if (isSwarmConnected) {
+      disconnect()
+      setSwarmConnected(false)
+      return
+    }
+
+    setStep(isConnected ? "swarm" : "wallet")
+
+    try {
+      if (!isConnected) {
+        const connector = connectors[0]
+        if (!connector) throw new Error("No wallet connector is available.")
+        await connectAsync({ connector })
+        setStep("idle")
+        return
+      }
+
+      if (chainId !== avalancheFuji.id) {
+        setStep("network")
+        await switchChainAsync({ chainId: avalancheFuji.id })
+        setStep("idle")
+        return
+      }
+
+      const swarm = await getSwarmIdClient()
+      if (!(await swarm.checkAuthStatus()).authenticated) {
+        await swarm.connect({ popupMode: "popup" })
+      }
+      setSwarmConnected(true)
+      setStep("idle")
+    } catch (error) {
+      console.error("Account connection failed", error)
+      setStep("error")
+    }
   }
 
-  if (chainId !== avalancheFuji.id) {
-    return <Button onClick={() => switchChain({ chainId: avalancheFuji.id })} disabled={isSwitching}>Switch to Avalanche Fuji</Button>
-  }
+  const isBusy =
+    isConnecting || isSwitching || ["wallet", "network", "swarm"].includes(step)
+  const label = isSwarmConnected
+    ? `Disconnect ${address ? shorten(address) : "account"}`
+    : !isConnected
+      ? step === "error"
+        ? "Retry account connection"
+        : "Connect account"
+      : chainId !== avalancheFuji.id
+        ? "Switch to Avalanche Fuji"
+        : step === "error"
+          ? "Retry Swarm ID"
+          : "Connect Swarm ID"
 
-  return <Button variant="outline" onClick={() => disconnect()}>Fuji · {address && shorten(address)}</Button>
+  return (
+    <Button
+      onClick={connectAccount}
+      disabled={isBusy}
+      aria-live="polite"
+      title={
+        isSwarmConnected ? "Disconnect and choose another wallet" : undefined
+      }
+    >
+      {isBusy && <Spinner data-icon="inline-start" />}
+      {isBusy
+        ? step === "wallet"
+          ? "Connecting wallet"
+          : step === "network"
+            ? "Switching network"
+            : "Opening Swarm ID"
+        : label}
+    </Button>
+  )
 }
