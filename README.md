@@ -2,7 +2,7 @@
 
 Trustless milestone-based escrow with private evidence and verifiable reputation.
 
-MilestonePay includes a Fuji-ready ERC-20 escrow, wallet connection, agreement creation, and full-upfront funding with a testnet-only Mock USDT. Evidence, disputes, reputation, and off-chain entity flows remain deferred.
+MilestonePay is a Fuji-ready ERC-20 milestone escrow with private Swarm ACT evidence transport, a trusted Arkiv protocol index, and deterministic reputation scoring. MockUSDT is a test token only, never Tether USDT.
 
 ## Requirements
 
@@ -71,11 +71,12 @@ The frontend consumes those generated addresses directly; no Vite address overri
 ## Layout
 
 - `apps/web`: Vite, React, TypeScript, React Router, Tailwind, wagmi, viem, and the generated shadcn preset. `/`, `/create`, and `/deal/:address` are the current wallet routes.
-- `apps/api`: strict TypeScript Fastify server with local CORS, graceful shutdown, and backend-only Arkiv SDK clients.
+- `apps/api`: Fastify API, read-only Avalanche indexer, trusted Arkiv writer/queries, and protocol materialization.
 - `contracts`: Foundry sources, tests, scripts, and dependencies.
 - `packages/shared`: reserved shared types/utilities.
 - `packages/contracts`: generated ABI/address artifacts consumed by the frontend.
-- `packages/reputation`: reserved deterministic reputation algorithm.
+- `packages/evidence`: browser-safe Swarm ACT descriptor, commitment, and identity utilities.
+- `packages/reputation`: pure deterministic reputation algorithm; it has no RPC, Arkiv, Fastify, AI, or environment dependency.
 
 The home route lives in `apps/web/src/routes/home.tsx`; future routes can be added in `App.tsx` for `/dashboard`, `/create`, `/deal/:address`, and `/reputation/:address`.
 
@@ -85,17 +86,26 @@ Frontend initialized with exactly:
 pnpm dlx shadcn@latest init --preset bOMBne8iA --template vite
 ```
 
+## Data pipeline and API
+
+Avalanche is the canonical financial protocol history. `pnpm api:sync` reads Factory-created Fuji escrows from block `58333416`, replays a conservative overlap, writes idempotent canonical event identities to Arkiv, and materializes immutable latest deal/dispute snapshots plus one settlement per milestone. The Avalanche reader uses `FUJI_RPC_URL` only and never signs transactions.
+
+Arkiv stores public protocol history and public evidence descriptors. All official reads constrain `project`, schema version, entity type, and the immutable trusted Arkiv writer address. The configured `ARKIV_PRIVATE_KEY` is server-only and is used solely to create official Arkiv entities. The 180-day testnet TTL is centralized in the API schema.
+
+Available routes: `GET /health`, `GET /arkiv/health`, `GET /deals/:escrow`, `GET /wallets/:address/history`, `GET /wallets/:address/reputation`, `GET /evidence/:hash`, and `POST /evidence`.
+
+`POST /evidence` accepts a public V1 descriptor only. It recomputes its keccak256 commitment and verifies the matching milestone/dispute hash directly on the canonical escrow. It never accepts files, plaintext evidence, ACT secrets, or Swarm identity private material. Swarm ID + ACT remains browser-side; no custom gateway is required.
+
 ## Environment and security
 
-Copy `.env.example`; do not commit `.env`. All `VITE_` values are public browser configuration, including the Swarm ID and optional subsidised gateway URLs. Arkiv access and private keys plus `AI_API_KEY` are backend-only: Compose passes only the listed public variables to the web container, and excludes environment files from image builds. Never prefix a secret with `VITE_`. `ARKIV_RPC` defaults to Tiramisu; set `ARKIV_ACCESS_KEY` for higher rate limits and a funded `0x` `ARKIV_PRIVATE_KEY` only when writes are implemented.
+Copy `.env.example`; do not commit `.env`. All `VITE_` values are public browser configuration. Swarm ID uses `VITE_SWARM_ID_ORIGIN`; do not configure a custom gateway. Arkiv access and private keys plus `AI_API_KEY` are backend-only: Compose passes only the listed public variables to the web container, and excludes environment files from image builds. Never prefix a secret with `VITE_`. `ARKIV_RPC` defaults to Tiramisu; set `ARKIV_ACCESS_KEY` for higher rate limits and a funded `0x` `ARKIV_PRIVATE_KEY` for protocol indexing.
 
 `PORT` defaults to 3001; Compose keeps the backend host port at 3001. `CORS_ORIGIN` defaults to `http://localhost:5173`. When running without Docker, changing `PORT` also requires updating `VITE_API_URL`. Restart services after changing environment values.
 
-## Planned architecture — not implemented
+## Architecture
 
-- Avalanche → escrow and settlement
-- Swarm → Swarm ID authentication is configured; encrypted evidence flows are planned
-- Arkiv → SDK connectivity is configured; protocol/reputation data models are planned
-- AI → reputation explanations and risk analysis
-
-Next: milestone evidence submission and approval UI. Disputes, external services, and reputation logic follow later.
+- Avalanche → canonical financial settlement and protocol events
+- Swarm ID + ACT → browser-side private evidence transport and access control
+- Arkiv → trusted public protocol index, descriptors, and reputation inputs
+- Reputation → deterministic, token-aware scoring with explainable factors
+- AI → planned explanation layer only; it has no role in evidence, indexing, or scoring

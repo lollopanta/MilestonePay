@@ -12,6 +12,7 @@
     "sync": "node --env-file-if-exists=../../.env --import tsx src/indexer/cli.ts"
   },
   "dependencies": {
+    "@milestonepay/contracts": "workspace:*",
     "@milestonepay/evidence": "workspace:*",
     "@milestonepay/reputation": "workspace:*",
     "@arkiv-network/sdk": "0.8.0",
