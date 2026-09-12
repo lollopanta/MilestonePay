@@ -8,9 +8,12 @@
     "build": "tsc",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
     "lint": "eslint .",
-    "test": "node --import tsx --test src/app.test.ts"
+    "test": "node --import tsx --test src/*.test.ts src/**/*.test.ts",
+    "sync": "node --env-file-if-exists=../../.env --import tsx src/indexer/cli.ts"
   },
   "dependencies": {
+    "@milestonepay/evidence": "workspace:*",
+    "@milestonepay/reputation": "workspace:*",
     "@arkiv-network/sdk": "0.8.0",
     "@fastify/cors": "^11.3.0",
     "fastify": "^5.12.3",

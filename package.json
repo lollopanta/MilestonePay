@@ -9,6 +9,7 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "contracts:export": "pnpm --dir packages/contracts export",
+    "api:sync": "pnpm --filter @milestonepay/api sync",
     "contracts:sync-fuji": "pnpm contracts:export && pnpm --dir packages/contracts sync-fuji"
   }
 }

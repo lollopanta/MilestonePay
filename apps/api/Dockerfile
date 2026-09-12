@@ -1,5 +1,5 @@
 FROM node:24-bookworm-slim
-RUN npm install --global pnpm@12.4.1
+RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json apps/api/package.json

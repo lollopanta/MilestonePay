@@ -27,7 +27,6 @@ services:
       VITE_PAYMENT_TOKEN_ADDRESS: ${VITE_PAYMENT_TOKEN_ADDRESS:-}
       VITE_ESCROW_FACTORY: ${VITE_ESCROW_FACTORY:-}
       VITE_SWARM_ID_ORIGIN: ${VITE_SWARM_ID_ORIGIN:-https://swarm-id.snaha.net}
-      VITE_SWARM_GATEWAY: ${VITE_SWARM_GATEWAY:-}
     ports:
       - "5173:5173"
     volumes:
