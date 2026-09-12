@@ -1,5 +1,3 @@
-import React from "react";
-
 interface MilestonePayIconProps {
   size?: number | string;
   className?: string;

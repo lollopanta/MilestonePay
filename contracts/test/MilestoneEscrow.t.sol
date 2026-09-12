@@ -9,13 +9,19 @@ import {FeeToken} from "./mocks/FeeToken.sol";
 
 contract MilestoneEscrowTest is Test {
     uint256 internal constant TOTAL = 10_000e6;
+    uint64 internal constant REVIEW_PERIOD = 7 days;
     event EscrowFunded(address indexed client, uint256 amount);
-    event MilestoneSubmitted(uint256 indexed milestoneId, bytes32 evidenceHash);
+    event MilestoneSubmitted(uint256 indexed milestoneId, bytes32 evidenceHash, uint256 submittedAt);
     event MilestoneApproved(uint256 indexed milestoneId, uint256 amount);
     event FundsReleased(uint256 indexed milestoneId, address indexed provider, uint256 amount);
     event DealCompleted();
     event EscrowCreated(
-        address indexed escrow, address indexed client, address indexed provider, address arbiter, address paymentToken
+        address indexed escrow,
+        address indexed client,
+        address indexed provider,
+        address arbiter,
+        address paymentToken,
+        uint64 reviewPeriod
     );
 
     address internal client = makeAddr("client");
@@ -33,7 +39,7 @@ contract MilestoneEscrowTest is Test {
         amounts.push(3_000e6);
         amounts.push(3_000e6);
         amounts.push(4_000e6);
-        escrow = new MilestoneEscrow(client, provider, arbiter, address(token), amounts);
+        escrow = new MilestoneEscrow(client, provider, arbiter, address(token), amounts, REVIEW_PERIOD);
         token.mint(client, TOTAL);
     }
 
@@ -54,38 +60,45 @@ contract MilestoneEscrowTest is Test {
 
     function testConstructorRejectsZeroAddresses() public {
         vm.expectRevert(MilestoneEscrow.InvalidAddress.selector);
-        new MilestoneEscrow(address(0), provider, arbiter, address(token), amounts);
+        new MilestoneEscrow(address(0), provider, arbiter, address(token), amounts, REVIEW_PERIOD);
         vm.expectRevert(MilestoneEscrow.InvalidAddress.selector);
-        new MilestoneEscrow(client, address(0), arbiter, address(token), amounts);
+        new MilestoneEscrow(client, address(0), arbiter, address(token), amounts, REVIEW_PERIOD);
         vm.expectRevert(MilestoneEscrow.InvalidAddress.selector);
-        new MilestoneEscrow(client, provider, address(0), address(token), amounts);
+        new MilestoneEscrow(client, provider, address(0), address(token), amounts, REVIEW_PERIOD);
         vm.expectRevert(MilestoneEscrow.InvalidAddress.selector);
-        new MilestoneEscrow(client, provider, arbiter, address(0), amounts);
+        new MilestoneEscrow(client, provider, arbiter, address(0), amounts, REVIEW_PERIOD);
     }
 
     function testConstructorRejectsClientAsProvider() public {
         vm.expectRevert(MilestoneEscrow.ClientIsProvider.selector);
-        new MilestoneEscrow(client, client, arbiter, address(token), amounts);
+        new MilestoneEscrow(client, client, arbiter, address(token), amounts, REVIEW_PERIOD);
     }
 
     function testConstructorRejectsArbiterAsParticipant() public {
         vm.expectRevert(MilestoneEscrow.ArbiterIsParticipant.selector);
-        new MilestoneEscrow(client, provider, client, address(token), amounts);
+        new MilestoneEscrow(client, provider, client, address(token), amounts, REVIEW_PERIOD);
         vm.expectRevert(MilestoneEscrow.ArbiterIsParticipant.selector);
-        new MilestoneEscrow(client, provider, provider, address(token), amounts);
+        new MilestoneEscrow(client, provider, provider, address(token), amounts, REVIEW_PERIOD);
     }
 
     function testConstructorRejectsNoMilestones() public {
         uint256[] memory empty = new uint256[](0);
         vm.expectRevert(MilestoneEscrow.NoMilestones.selector);
-        new MilestoneEscrow(client, provider, arbiter, address(token), empty);
+        new MilestoneEscrow(client, provider, arbiter, address(token), empty, REVIEW_PERIOD);
+    }
+
+    function testConstructorRejectsInvalidReviewPeriod() public {
+        vm.expectRevert(abi.encodeWithSelector(MilestoneEscrow.InvalidReviewPeriod.selector, 0));
+        new MilestoneEscrow(client, provider, arbiter, address(token), amounts, 0);
+        vm.expectRevert(abi.encodeWithSelector(MilestoneEscrow.InvalidReviewPeriod.selector, uint64(365 days + 1)));
+        new MilestoneEscrow(client, provider, arbiter, address(token), amounts, uint64(365 days + 1));
     }
 
     function testConstructorRejectsZeroMilestone() public {
         uint256[] memory invalid = new uint256[](2);
         invalid[0] = 1;
         vm.expectRevert(abi.encodeWithSelector(MilestoneEscrow.ZeroMilestoneAmount.selector, 1));
-        new MilestoneEscrow(client, provider, arbiter, address(token), invalid);
+        new MilestoneEscrow(client, provider, arbiter, address(token), invalid, REVIEW_PERIOD);
     }
 
     function testOnlyClientCanFund() public {
@@ -127,7 +140,8 @@ contract MilestoneEscrowTest is Test {
 
     function testRejectsFeeOnTransferToken() public {
         FeeToken feeToken = new FeeToken();
-        MilestoneEscrow feeEscrow = new MilestoneEscrow(client, provider, arbiter, address(feeToken), amounts);
+        MilestoneEscrow feeEscrow =
+            new MilestoneEscrow(client, provider, arbiter, address(feeToken), amounts, REVIEW_PERIOD);
         uint256 total = feeEscrow.totalAmount();
         feeToken.mint(client, total);
         vm.prank(client);
@@ -196,7 +210,7 @@ contract MilestoneEscrowTest is Test {
         _approveAndFund();
         bytes32 evidence = keccak256("evidence");
         vm.expectEmit(true, false, false, true, address(escrow));
-        emit MilestoneSubmitted(0, evidence);
+        emit MilestoneSubmitted(0, evidence, block.timestamp);
         vm.prank(provider);
         escrow.submitMilestone(0, evidence);
 
@@ -229,7 +243,7 @@ contract MilestoneEscrowTest is Test {
     function testCannotApproveFutureMilestone() public {
         _approveAndFund();
         vm.prank(client);
-        vm.expectRevert(MilestoneEscrow.InvalidMilestoneState.selector);
+        vm.expectRevert(abi.encodeWithSelector(MilestoneEscrow.NotCurrentMilestone.selector, 0, 1));
         escrow.approveMilestone(1);
     }
 
@@ -245,12 +259,15 @@ contract MilestoneEscrowTest is Test {
         assertEq(token.balanceOf(provider), 3_000e6);
         assertEq(token.balanceOf(address(escrow)), 7_000e6);
         assertEq(escrow.totalReleased(), 3_000e6);
-        assertEq(token.balanceOf(address(escrow)) + escrow.totalReleased(), escrow.totalAmount());
+        assertEq(escrow.totalRefunded(), 0);
+        assertEq(
+            token.balanceOf(address(escrow)) + escrow.totalReleased() + escrow.totalRefunded(), escrow.totalAmount()
+        );
         assertEq(uint256(escrow.status()), uint256(MilestoneEscrow.DealStatus.Active));
         assertEq(escrow.currentMilestone(), 1);
 
         vm.prank(client);
-        vm.expectRevert(MilestoneEscrow.InvalidMilestoneState.selector);
+        vm.expectRevert(abi.encodeWithSelector(MilestoneEscrow.NotCurrentMilestone.selector, 1, 0));
         escrow.approveMilestone(0);
     }
 
@@ -266,7 +283,9 @@ contract MilestoneEscrowTest is Test {
             vm.prank(client);
             escrow.approveMilestone(i);
             assertLe(escrow.totalReleased(), escrow.totalAmount());
-            assertEq(token.balanceOf(address(escrow)) + escrow.totalReleased(), escrow.totalAmount());
+            assertEq(
+                token.balanceOf(address(escrow)) + escrow.totalReleased() + escrow.totalRefunded(), escrow.totalAmount()
+            );
             if (i < amounts.length - 1) {
                 assertEq(uint256(escrow.status()), uint256(MilestoneEscrow.DealStatus.Active));
                 assertEq(escrow.currentMilestone(), i + 1);
@@ -292,7 +311,7 @@ contract MilestoneEscrowTest is Test {
 
     function testFactoryUsesCallerAsClientAndRegistersEscrow() public {
         vm.prank(client);
-        address created = factory.createEscrow(provider, arbiter, address(token), amounts);
+        address created = factory.createEscrow(provider, arbiter, address(token), amounts, REVIEW_PERIOD);
         assertEq(MilestoneEscrow(created).client(), client);
         assertTrue(factory.isEscrow(created));
         assertFalse(factory.isEscrow(stranger));
@@ -301,16 +320,16 @@ contract MilestoneEscrowTest is Test {
     function testFactoryEmitsCreationEvent() public {
         address predicted = vm.computeCreateAddress(address(factory), vm.getNonce(address(factory)));
         vm.expectEmit(true, true, true, true, address(factory));
-        emit EscrowCreated(predicted, client, provider, arbiter, address(token));
+        emit EscrowCreated(predicted, client, provider, arbiter, address(token), REVIEW_PERIOD);
         vm.prank(client);
-        address created = factory.createEscrow(provider, arbiter, address(token), amounts);
+        address created = factory.createEscrow(provider, arbiter, address(token), amounts, REVIEW_PERIOD);
         assertEq(created, predicted);
     }
 
     function testFactoryCreatesIndependentEscrows() public {
         vm.startPrank(client);
-        address first = factory.createEscrow(provider, arbiter, address(token), amounts);
-        address second = factory.createEscrow(provider, arbiter, address(token), amounts);
+        address first = factory.createEscrow(provider, arbiter, address(token), amounts, REVIEW_PERIOD);
+        address second = factory.createEscrow(provider, arbiter, address(token), amounts, REVIEW_PERIOD);
         vm.stopPrank();
         assertNotEq(first, second);
         assertTrue(factory.isEscrow(first));
@@ -326,7 +345,8 @@ contract MilestoneEscrowTest is Test {
         fuzzAmounts[1] = second;
         fuzzAmounts[2] = third;
         uint256 total = first + second + third;
-        MilestoneEscrow fuzzEscrow = new MilestoneEscrow(client, provider, arbiter, address(token), fuzzAmounts);
+        MilestoneEscrow fuzzEscrow =
+            new MilestoneEscrow(client, provider, arbiter, address(token), fuzzAmounts, REVIEW_PERIOD);
         assertEq(fuzzEscrow.totalAmount(), total);
         assertEq(token.balanceOf(address(fuzzEscrow)), 0);
         assertEq(fuzzEscrow.totalReleased(), 0);
@@ -336,7 +356,7 @@ contract MilestoneEscrowTest is Test {
         token.approve(address(fuzzEscrow), total);
         vm.prank(client);
         fuzzEscrow.fund();
-        assertEq(token.balanceOf(address(fuzzEscrow)) + fuzzEscrow.totalReleased(), total);
+        assertEq(token.balanceOf(address(fuzzEscrow)) + fuzzEscrow.totalReleased() + fuzzEscrow.totalRefunded(), total);
 
         uint256 providerBefore = token.balanceOf(provider);
         for (uint256 i; i < fuzzAmounts.length; ++i) {
@@ -345,7 +365,9 @@ contract MilestoneEscrowTest is Test {
             vm.prank(client);
             fuzzEscrow.approveMilestone(i);
             assertLe(fuzzEscrow.totalReleased(), total);
-            assertEq(token.balanceOf(address(fuzzEscrow)) + fuzzEscrow.totalReleased(), total);
+            assertEq(
+                token.balanceOf(address(fuzzEscrow)) + fuzzEscrow.totalReleased() + fuzzEscrow.totalRefunded(), total
+            );
         }
 
         assertEq(fuzzEscrow.totalReleased(), total);

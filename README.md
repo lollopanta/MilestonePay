@@ -47,6 +47,8 @@ forge test
 
 `src/MilestoneEscrow.sol` implements full upfront funding and sequential client-approved releases. Client, provider, and arbiter must be distinct. `src/EscrowFactory.sol` deploys agreements using the caller as client. `src/testnet/MockUSDT.sol` is a mintable six-decimal Fuji demo token only, not Tether USDT.
 
+V1 has no automatic provider-delivery deadline: the client can dispute the current pending milestone for arbiter resolution. A submitted milestone has a per-escrow review period; after it expires, the provider can claim that milestone's payment.
+
 Deploy after adding a funded testnet deployer key to your untracked `.env`:
 
 ```bash

@@ -27,8 +27,46 @@ export const MilestoneEscrowAbi = [
         "name": "milestoneAmounts",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "reviewPeriod_",
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "BPS_DENOMINATOR",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_REVIEW_PERIOD",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "acceptCancellation",
+    "inputs": [],
+    "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
@@ -56,6 +94,32 @@ export const MilestoneEscrowAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "cancellationRequester",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "claimAfterReviewTimeout",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -92,6 +156,62 @@ export const MilestoneEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "getDispute",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct MilestoneEscrow.Dispute",
+        "components": [
+          {
+            "name": "openedBy",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "clientEvidenceHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "providerEvidenceHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "resolved",
+            "type": "bool",
+            "internalType": "bool"
+          },
+          {
+            "name": "providerBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "providerAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "clientRefundAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "getMilestone",
     "inputs": [
       {
@@ -117,6 +237,11 @@ export const MilestoneEscrowAbi = [
             "internalType": "bytes32"
           },
           {
+            "name": "submittedAt",
+            "type": "uint64",
+            "internalType": "uint64"
+          },
+          {
             "name": "status",
             "type": "uint8",
             "internalType": "enum MilestoneEscrow.MilestoneStatus"
@@ -138,6 +263,24 @@ export const MilestoneEscrowAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "openDispute",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "evidenceHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -167,6 +310,49 @@ export const MilestoneEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "requestCancellation",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resolveDispute",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "providerBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "terminateAgreement",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "reviewPeriod",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "status",
     "inputs": [],
     "outputs": [
@@ -177,6 +363,24 @@ export const MilestoneEscrowAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "submitDisputeEvidence",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "evidenceHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -211,6 +415,19 @@ export const MilestoneEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "totalRefunded",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "totalReleased",
     "inputs": [],
     "outputs": [
@@ -224,8 +441,158 @@ export const MilestoneEscrowAbi = [
   },
   {
     "type": "event",
+    "name": "AgreementCancelled",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "refundedAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CancellationRequestInvalidated",
+    "inputs": [
+      {
+        "name": "requester",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CancellationRequested",
+    "inputs": [
+      {
+        "name": "requester",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "DealCompleted",
     "inputs": [],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DisputeEvidenceSubmitted",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "submitter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "evidenceHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DisputeOpened",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "openedBy",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "clientEvidenceHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "providerEvidenceHash",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DisputeResolved",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "providerBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "providerAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "clientRefundAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "terminateAgreement",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
     "anonymous": false
   },
   {
@@ -306,6 +673,37 @@ export const MilestoneEscrowAbi = [
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
+      },
+      {
+        "name": "submittedAt",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ReviewTimeoutClaimed",
+    "inputs": [
+      {
+        "name": "milestoneId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "provider",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -317,7 +715,22 @@ export const MilestoneEscrowAbi = [
   },
   {
     "type": "error",
+    "name": "CancellationAlreadyRequested",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CancellationRequesterCannotAccept",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "ClientIsProvider",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EvidenceAlreadySubmitted",
     "inputs": []
   },
   {
@@ -358,7 +771,34 @@ export const MilestoneEscrowAbi = [
   },
   {
     "type": "error",
+    "name": "InvalidProviderBps",
+    "inputs": [
+      {
+        "name": "providerBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidReviewPeriod",
+    "inputs": [
+      {
+        "name": "reviewPeriod",
+        "type": "uint64",
+        "internalType": "uint64"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "InvalidState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoCancellationRequest",
     "inputs": []
   },
   {
@@ -386,6 +826,28 @@ export const MilestoneEscrowAbi = [
     "type": "error",
     "name": "ReentrancyGuardReentrantCall",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReviewPeriodActive",
+    "inputs": [
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ReviewPeriodElapsed",
+    "inputs": [
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",

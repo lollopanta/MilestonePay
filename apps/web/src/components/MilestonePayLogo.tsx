@@ -1,6 +1,4 @@
-import React from "react";
-
-interface MilestonePayLogoProps extends React.SVGProps<SVGSVGElement> {
+interface MilestonePayLogoProps {
   height?: number | string;
   width?: number | string;
   className?: string;
@@ -10,7 +8,6 @@ export function MilestonePayLogo({
   height = 40,
   width = "auto",
   className = "",
-  ...props
 }: MilestonePayLogoProps) {
   return (
     <img

@@ -25,8 +25,20 @@ import {
 import { wagmiConfig } from "@/web3/config"
 import { contracts } from "@/web3/contracts"
 
-const statusLabels = ["Awaiting funding", "Active", "Completed"]
-const milestoneLabels = ["Pending", "Submitted", "Approved"]
+const statusLabels = [
+  "Awaiting funding",
+  "Active",
+  "Disputed",
+  "Completed",
+  "Cancelled",
+]
+const milestoneLabels = [
+  "Pending",
+  "Submitted",
+  "Disputed",
+  "Approved",
+  "Resolved",
+]
 const demoMintAmount = 10_000n * 10n ** 6n
 const emptyEvidenceHash = `0x${"0".repeat(64)}`
 const short = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`
@@ -125,7 +137,7 @@ export function Deal() {
   const data = escrow.data
   const current = data.milestones[Number(data.currentMilestone)]
   const completedMilestones = data.milestones.filter(
-    (milestone) => milestone.status === 2
+    (milestone) => milestone.status === 3 || milestone.status === 4
   ).length
   const percentage = progressPercentage(data.totalReleased, data.totalAmount)
   const canMint =
@@ -158,7 +170,7 @@ export function Deal() {
         <WalletButton />
       </header>
       <h1 className="text-3xl font-semibold">Agreement</h1>
-      {data.status === 2 ? (
+      {data.status === 3 ? (
         <p className="mt-2 font-medium">Agreement completed</p>
       ) : (
         <p className="mt-2 text-muted-foreground">
@@ -226,7 +238,7 @@ export function Deal() {
                   Evidence: {short(milestone.evidenceHash)}
                 </p>
               )}
-              {milestone.status === 2 && (
+              {(milestone.status === 3 || milestone.status === 4) && (
                 <p className="mt-2 text-sm text-muted-foreground">
                   Released: {formatUsdt(milestone.amount)}
                 </p>

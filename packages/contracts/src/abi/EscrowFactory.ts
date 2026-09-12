@@ -23,6 +23,11 @@ export const EscrowFactoryAbi = [
         "name": "milestoneAmounts",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "reviewPeriod",
+        "type": "uint64",
+        "internalType": "uint64"
       }
     ],
     "outputs": [
@@ -86,6 +91,12 @@ export const EscrowFactoryAbi = [
         "type": "address",
         "indexed": false,
         "internalType": "address"
+      },
+      {
+        "name": "reviewPeriod",
+        "type": "uint64",
+        "indexed": false,
+        "internalType": "uint64"
       }
     ],
     "anonymous": false

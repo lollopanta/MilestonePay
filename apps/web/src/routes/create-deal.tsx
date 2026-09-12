@@ -12,6 +12,7 @@ import { wagmiConfig } from "@/web3/config"
 import { contracts, tokenDecimals } from "@/web3/contracts"
 
 const blankMilestone = ""
+const defaultReviewPeriod = 7n * 24n * 60n * 60n
 
 function transactionMessage(error: unknown) {
   return error instanceof Error && /rejected|denied|cancelled/i.test(error.message)
@@ -69,7 +70,7 @@ export function CreateDeal() {
         address: contracts.escrowFactory,
         abi: EscrowFactoryAbi,
         functionName: "createEscrow",
-        args: [provider, arbiter, contracts.paymentToken, amounts],
+        args: [provider, arbiter, contracts.paymentToken, amounts, defaultReviewPeriod],
       })
       setMessage("Transaction pending")
       const receipt = await waitForTransactionReceipt(wagmiConfig, { hash })
