@@ -59,7 +59,14 @@ cd ..
 pnpm contracts:sync-fuji
 ```
 
-`pnpm contracts:export` deterministically regenerates TypeScript ABIs with `forge inspect`; `pnpm contracts:sync-fuji` additionally reads Foundry's Fuji broadcast record and writes the two public deployment addresses to `packages/contracts/src/addresses.ts`. Copy those public addresses to `VITE_ESCROW_FACTORY` and `VITE_PAYMENT_TOKEN_ADDRESS` in `.env` before starting Vite or Compose. Never place `DEPLOYER_PRIVATE_KEY` in a `VITE_` variable.
+`pnpm contracts:export` deterministically regenerates TypeScript ABIs with `forge inspect`; `pnpm contracts:sync-fuji` additionally reads Foundry's Fuji broadcast record and writes the two public deployment addresses to `packages/contracts/src/addresses.ts`.
+
+The verified Fuji deployment is the canonical application configuration exported by `@milestonepay/contracts`:
+
+- MockUSDT (test token): `0x42af675aE147084A063058edEDdc729C9F1FbF35`
+- EscrowFactory: `0xEe7328dC4002742D3e50DA2eED62B98f7Ab2F003`
+
+The frontend consumes those generated addresses directly; no Vite address override is required. Never place `DEPLOYER_PRIVATE_KEY` in a `VITE_` variable.
 
 ## Layout
 
