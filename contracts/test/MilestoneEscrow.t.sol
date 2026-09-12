@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {MilestoneEscrow} from "../src/MilestoneEscrow.sol";
 import {EscrowFactory} from "../src/EscrowFactory.sol";
-import {MockUSDT} from "./mocks/MockUSDT.sol";
+import {MockUSDT} from "../src/testnet/MockUSDT.sol";
 import {FeeToken} from "./mocks/FeeToken.sol";
 
 contract MilestoneEscrowTest is Test {
@@ -45,6 +45,7 @@ contract MilestoneEscrowTest is Test {
         assertEq(escrow.totalAmount(), 10_000e6);
         assertEq(escrow.milestoneCount(), 3);
         assertEq(uint256(escrow.status()), uint256(MilestoneEscrow.DealStatus.Created));
+        assertEq(escrow.currentMilestone(), 0);
         MilestoneEscrow.Milestone memory milestone = escrow.getMilestone(2);
         assertEq(milestone.amount, 4_000e6);
         assertEq(milestone.evidenceHash, bytes32(0));
@@ -65,6 +66,13 @@ contract MilestoneEscrowTest is Test {
     function testConstructorRejectsClientAsProvider() public {
         vm.expectRevert(MilestoneEscrow.ClientIsProvider.selector);
         new MilestoneEscrow(client, client, arbiter, address(token), amounts);
+    }
+
+    function testConstructorRejectsArbiterAsParticipant() public {
+        vm.expectRevert(MilestoneEscrow.ArbiterIsParticipant.selector);
+        new MilestoneEscrow(client, provider, client, address(token), amounts);
+        vm.expectRevert(MilestoneEscrow.ArbiterIsParticipant.selector);
+        new MilestoneEscrow(client, provider, provider, address(token), amounts);
     }
 
     function testConstructorRejectsNoMilestones() public {
@@ -165,6 +173,13 @@ contract MilestoneEscrowTest is Test {
         escrow.submitMilestone(3, keccak256("evidence"));
     }
 
+    function testCannotSubmitFutureMilestone() public {
+        _approveAndFund();
+        vm.prank(provider);
+        vm.expectRevert(abi.encodeWithSelector(MilestoneEscrow.NotCurrentMilestone.selector, 0, 1));
+        escrow.submitMilestone(1, keccak256("evidence"));
+    }
+
     function testCannotReadNonexistentMilestone() public {
         vm.expectRevert(MilestoneEscrow.InvalidMilestone.selector);
         escrow.getMilestone(3);
@@ -211,6 +226,13 @@ contract MilestoneEscrowTest is Test {
         escrow.approveMilestone(3);
     }
 
+    function testCannotApproveFutureMilestone() public {
+        _approveAndFund();
+        vm.prank(client);
+        vm.expectRevert(MilestoneEscrow.InvalidMilestoneState.selector);
+        escrow.approveMilestone(1);
+    }
+
     function testApprovalReleasesExactAmountOnceAndKeepsRemainder() public {
         _submit(0);
         vm.expectEmit(true, false, false, true, address(escrow));
@@ -225,6 +247,7 @@ contract MilestoneEscrowTest is Test {
         assertEq(escrow.totalReleased(), 3_000e6);
         assertEq(token.balanceOf(address(escrow)) + escrow.totalReleased(), escrow.totalAmount());
         assertEq(uint256(escrow.status()), uint256(MilestoneEscrow.DealStatus.Active));
+        assertEq(escrow.currentMilestone(), 1);
 
         vm.prank(client);
         vm.expectRevert(MilestoneEscrow.InvalidMilestoneState.selector);
@@ -246,6 +269,7 @@ contract MilestoneEscrowTest is Test {
             assertEq(token.balanceOf(address(escrow)) + escrow.totalReleased(), escrow.totalAmount());
             if (i < amounts.length - 1) {
                 assertEq(uint256(escrow.status()), uint256(MilestoneEscrow.DealStatus.Active));
+                assertEq(escrow.currentMilestone(), i + 1);
             }
         }
 
@@ -253,6 +277,7 @@ contract MilestoneEscrowTest is Test {
         assertEq(token.balanceOf(address(escrow)), 0);
         assertEq(escrow.totalReleased(), escrow.totalAmount());
         assertEq(uint256(escrow.status()), uint256(MilestoneEscrow.DealStatus.Completed));
+        assertEq(escrow.currentMilestone(), amounts.length - 1);
     }
 
     function testCompletedEscrowCannotBeFundedOrResubmitted() public {

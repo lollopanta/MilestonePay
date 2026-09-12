@@ -28,10 +28,12 @@ contract MilestoneEscrow is ReentrancyGuard {
     error Unauthorized();
     error InvalidAddress();
     error ClientIsProvider();
+    error ArbiterIsParticipant();
     error NoMilestones();
     error ZeroMilestoneAmount(uint256 milestoneId);
     error InvalidState();
     error InvalidMilestone();
+    error NotCurrentMilestone(uint256 expected, uint256 provided);
     error InvalidMilestoneState();
     error InvalidEvidenceHash();
     error IncorrectFundingAmount(uint256 expected, uint256 received);
@@ -50,6 +52,7 @@ contract MilestoneEscrow is ReentrancyGuard {
 
     DealStatus public status;
     uint256 public totalReleased;
+    uint256 public currentMilestone;
     Milestone[] private milestones;
 
     modifier onlyClient() {
@@ -68,6 +71,7 @@ contract MilestoneEscrow is ReentrancyGuard {
             revert InvalidAddress();
         }
         if (client_ == provider_) revert ClientIsProvider();
+        if (arbiter_ == client_ || arbiter_ == provider_) revert ArbiterIsParticipant();
         if (milestoneAmounts.length == 0) revert NoMilestones();
 
         uint256 total;
@@ -114,6 +118,7 @@ contract MilestoneEscrow is ReentrancyGuard {
 
         Milestone storage milestone = milestones[milestoneId];
         if (milestone.status != MilestoneStatus.Pending) revert InvalidMilestoneState();
+        if (milestoneId != currentMilestone) revert NotCurrentMilestone(currentMilestone, milestoneId);
 
         milestone.evidenceHash = evidenceHash;
         milestone.status = MilestoneStatus.Submitted;
@@ -126,11 +131,13 @@ contract MilestoneEscrow is ReentrancyGuard {
 
         Milestone storage milestone = milestones[milestoneId];
         if (milestone.status != MilestoneStatus.Submitted) revert InvalidMilestoneState();
+        if (milestoneId != currentMilestone) revert NotCurrentMilestone(currentMilestone, milestoneId);
 
         uint256 amount = milestone.amount;
         milestone.status = MilestoneStatus.Approved;
         totalReleased += amount;
         if (totalReleased == totalAmount) status = DealStatus.Completed;
+        else currentMilestone += 1;
 
         emit MilestoneApproved(milestoneId, amount);
         emit FundsReleased(milestoneId, provider, amount);

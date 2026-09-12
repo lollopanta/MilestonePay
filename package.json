@@ -7,6 +7,8 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "contracts:export": "pnpm --dir packages/contracts export",
+    "contracts:sync-fuji": "pnpm contracts:export && pnpm --dir packages/contracts sync-fuji"
   }
 }

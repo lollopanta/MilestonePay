@@ -1,4 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "react-router"
+
+import { Button } from "@/components/ui/button"
+import { WalletButton } from "@/components/wallet-button"
 
 export function Home() {
   const health = useQuery({
@@ -26,8 +30,10 @@ export function Home() {
 
   return (
     <main className="flex min-h-svh flex-col items-center justify-center gap-4 p-6 text-center">
+      <div className="absolute top-6 right-6"><WalletButton /></div>
       <h1 className="text-4xl font-semibold tracking-tight">MilestonePay</h1>
-      <p className="text-muted-foreground">Trustless milestone-based escrow</p>
+      <p className="max-w-md text-muted-foreground">Trustless milestone-based escrow with private evidence and verifiable reputation.</p>
+      <Button nativeButton={false} render={<Link to="/create" />}>Create Agreement</Button>
       <p role="status">
         API Status:{" "}
         {health.isError

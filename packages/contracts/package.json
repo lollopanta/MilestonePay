@@ -1,1 +1,11 @@
-{ "name": "@milestonepay/contracts", "version": "0.0.0", "private": true }
+{
+  "name": "@milestonepay/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "export": "node scripts/export-abis.mjs"
+    ,"sync-fuji": "node scripts/sync-fuji-deployment.mjs"
+  }
+}

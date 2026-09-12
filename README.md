@@ -2,7 +2,7 @@
 
 Trustless milestone-based escrow with private evidence and verifiable reputation.
 
-MilestonePay currently includes the core ERC-20 milestone escrow happy path, a React home page, and Fastify health endpoints. Wallet integration, disputes, reputation, and evidence flows are not implemented.
+MilestonePay includes a Fuji-ready ERC-20 escrow, wallet connection, agreement creation, and full-upfront funding with a testnet-only Mock USDT. Evidence, disputes, reputation, and off-chain entity flows remain deferred.
 
 ## Requirements
 
@@ -45,15 +45,27 @@ forge build
 forge test
 ```
 
-`src/MilestoneEscrow.sol` implements full upfront funding and client-approved milestone releases. `src/EscrowFactory.sol` deploys agreements using the caller as client. OpenZeppelin Contracts and forge-std are installed as Git submodules. No contract is deployed.
+`src/MilestoneEscrow.sol` implements full upfront funding and sequential client-approved releases. Client, provider, and arbiter must be distinct. `src/EscrowFactory.sol` deploys agreements using the caller as client. `src/testnet/MockUSDT.sol` is a mintable six-decimal Fuji demo token only, not Tether USDT.
+
+Deploy after adding a funded testnet deployer key to your untracked `.env`:
+
+```bash
+cd contracts
+forge script script/DeployFuji.s.sol:DeployFuji \
+  --rpc-url "$FUJI_RPC_URL" --broadcast
+cd ..
+pnpm contracts:sync-fuji
+```
+
+`pnpm contracts:export` deterministically regenerates TypeScript ABIs with `forge inspect`; `pnpm contracts:sync-fuji` additionally reads Foundry's Fuji broadcast record and writes the two public deployment addresses to `packages/contracts/src/addresses.ts`. Copy those public addresses to `VITE_ESCROW_FACTORY` and `VITE_PAYMENT_TOKEN_ADDRESS` in `.env` before starting Vite or Compose. Never place `DEPLOYER_PRIVATE_KEY` in a `VITE_` variable.
 
 ## Layout
 
-- `apps/web`: Vite, React, TypeScript, React Router, Tailwind, and the generated shadcn preset. TanStack Query handles health; wagmi and viem support future wallet work; Swarm ID initializes its authentication iframe.
+- `apps/web`: Vite, React, TypeScript, React Router, Tailwind, wagmi, viem, and the generated shadcn preset. `/`, `/create`, and `/deal/:address` are the current wallet routes.
 - `apps/api`: strict TypeScript Fastify server with local CORS, graceful shutdown, and backend-only Arkiv SDK clients.
 - `contracts`: Foundry sources, tests, scripts, and dependencies.
 - `packages/shared`: reserved shared types/utilities.
-- `packages/contracts`: reserved generated ABI/address artifacts.
+- `packages/contracts`: generated ABI/address artifacts consumed by the frontend.
 - `packages/reputation`: reserved deterministic reputation algorithm.
 
 The home route lives in `apps/web/src/routes/home.tsx`; future routes can be added in `App.tsx` for `/dashboard`, `/create`, `/deal/:address`, and `/reputation/:address`.
@@ -77,4 +89,4 @@ Copy `.env.example`; do not commit `.env`. All `VITE_` values are public browser
 - Arkiv → SDK connectivity is configured; protocol/reputation data models are planned
 - AI → reputation explanations and risk analysis
 
-Next: generate ABI/address artifacts, then add wallet connection and deal routes. Disputes, external services, and reputation logic follow later.
+Next: milestone evidence submission and approval UI. Disputes, external services, and reputation logic follow later.

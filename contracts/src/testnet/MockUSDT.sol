@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
+/// @notice Testnet-only six-decimal token for Fuji demos. It is not Tether USDT.
 contract MockUSDT is ERC20 {
     constructor() ERC20("Mock USDT", "USDT") {}
 
