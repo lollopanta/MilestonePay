@@ -21,7 +21,12 @@ export class ProtocolService {
   }
   async history(wallet: Address) {
     const [events, settlements, disputes, deals] = await Promise.all([getWalletHistory(this.repo, wallet), getWalletSettlements(this.repo, wallet), getWalletDisputes(this.repo, wallet), this.repo.all("deal")])
-    const matchingDeals = deals.filter((deal) => lower(String(deal.attributes.client)) === lower(wallet) || lower(String(deal.attributes.provider)) === lower(wallet))
+    const latestDeals = new Map<string, typeof deals[number]>()
+    for (const deal of deals) {
+      const escrow = lower(String(deal.attributes.escrow)); const current = latestDeals.get(escrow)
+      if (!current || Number(deal.attributes.last_event_block) > Number(current.attributes.last_event_block) || deal.attributes.last_event_block === current.attributes.last_event_block && String(deal.attributes.last_event_id) > String(current.attributes.last_event_id)) latestDeals.set(escrow, deal)
+    }
+    const matchingDeals = [...latestDeals.values()].filter((deal) => lower(String(deal.attributes.client)) === lower(wallet) || lower(String(deal.attributes.provider)) === lower(wallet))
     return { deals: matchingDeals.map((deal) => deal.attributes), events: events.map((event) => event.attributes), settlements: settlements.map((settlement) => settlement.attributes), disputes: disputes.map((dispute) => dispute.attributes) }
   }
   async reputation(wallet: Address) { return jsonSafe(calculateReputation(wallet as ReputationAddress, normalizeProtocolHistory(await this.history(wallet)))) }

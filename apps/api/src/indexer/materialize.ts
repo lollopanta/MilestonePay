@@ -14,15 +14,21 @@ export async function materialize(repo: ArkivRepository, reader: AvalancheReader
   const events = eventEntities.map((entity) => entity.payload as NormalizedEvent).filter((event): event is NormalizedEvent => Boolean(event)).sort((a, b) => a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex || a.logIndex - b.logIndex)
   const creates = new Map<string, NormalizedEvent>()
   for (const event of events) if (event.eventName === "EscrowCreated") creates.set(lower(event.escrow), event)
+  const deals = await repo.all("deal")
+  const dealSnapshots = new Map<string, Record<string, string | number | boolean>>()
   for (const [escrow, created] of creates) {
     const state = await reader.readEscrow(escrow as Address)
     const last = events.filter((event) => lower(event.escrow) === escrow).at(-1)!
-    const existing = latest(await repo.find("deal", "escrow", escrow))
-    if (existing?.attributes.last_event_id === eventKey(last)) continue
-    await repo.put({ type: "deal", attributes: { chain_id: state.client ? reader.chainId : 0, factory: lower(reader.factory), escrow, client: lower(state.client), provider: lower(state.provider), arbiter: lower(state.arbiter), payment_token: lower(state.paymentToken), total_amount: state.totalAmount.toString(), review_period: state.reviewPeriod.toString(), status: state.status, current_milestone: state.currentMilestone.toString(), total_released: state.totalReleased.toString(), total_refunded: state.totalRefunded.toString(), creation_block: created.blockNumber, creation_tx_hash: created.txHash.toLowerCase(), last_event_block: last.blockNumber, last_event_tx_hash: last.txHash.toLowerCase(), last_event_id: eventKey(last) }, payload: { escrow, state, creation: created, lastEvent: last } })
+    const existing = latest(deals.filter((deal) => lower(String(deal.attributes.escrow)) === escrow))
+    if (existing?.attributes.last_event_id === eventKey(last)) { dealSnapshots.set(escrow, existing.attributes); continue }
+    const attributes = { chain_id: state.client ? reader.chainId : 0, factory: lower(reader.factory), escrow, client: lower(state.client), provider: lower(state.provider), arbiter: lower(state.arbiter), payment_token: lower(state.paymentToken), total_amount: state.totalAmount.toString(), review_period: state.reviewPeriod.toString(), status: state.status, current_milestone: state.currentMilestone.toString(), total_released: state.totalReleased.toString(), total_refunded: state.totalRefunded.toString(), creation_block: created.blockNumber, creation_tx_hash: created.txHash.toLowerCase(), last_event_block: last.blockNumber, last_event_tx_hash: last.txHash.toLowerCase(), last_event_id: eventKey(last) }
+    await repo.put({ type: "deal", attributes, payload: { escrow, state, creation: created, lastEvent: last } })
+    dealSnapshots.set(escrow, attributes)
   }
-  const deals = await repo.all("deal")
-  const dealFor = (escrow: string) => latest(deals.filter((deal) => lower(String(deal.attributes.escrow)) === lower(escrow)))
+  const dealFor = (escrow: string) => {
+    const attributes = dealSnapshots.get(lower(escrow)) ?? latest(deals.filter((deal) => lower(String(deal.attributes.escrow)) === lower(escrow)))?.attributes
+    return attributes ? { attributes } : undefined
+  }
   const settlements = new Map<string, NormalizedEvent>()
   for (const event of events) {
     if (event.eventName === "DisputeResolved") settlements.set(`${event.txHash}:${event.attributes?.milestone_id}`, event)

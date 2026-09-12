@@ -23,7 +23,7 @@ test("Anvil contracts emit logs that materialize without duplicate settlements o
   const anvil = process.env.ANVIL_BIN ?? resolve(process.env.HOME ?? "", ".foundry/bin/anvil")
   assert.ok(existsSync(anvil), "Anvil is required for the real-contract indexer integration test")
   const anvilProcess = spawn(anvil, ["--silent", "--port", "18545", "--chain-id", "31337"], { stdio: "ignore" })
-  const publicClient = createPublicClient({ chain: foundry, transport: http(rpc, { retryCount: 0, timeout: 100 }) })
+  const publicClient = createPublicClient({ chain: foundry, transport: http(rpc, { retryCount: 0, timeout: 1_000 }) })
   try {
     let ready = false
     for (let i = 0; i < 40; i++) {

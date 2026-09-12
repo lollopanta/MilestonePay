@@ -40,12 +40,18 @@ test('Arkiv health returns 503 when its RPC is unavailable', async () => {
 
 test('protocol routes validate public identifiers before external reads', async () => {
   const reader: AvalancheReader = { chainId: 43113, factory: '0x0000000000000000000000000000000000000001', readEvents: async () => [], isEscrow: async () => false, evidenceHash: async () => `0x${'0'.repeat(64)}`, readEscrow: async () => { throw new Error('not reached') } }
-  const app = buildApp(async () => 123n, { repo: new MemoryArkivRepository('0x0000000000000000000000000000000000000002'), reader })
+  const repo = new MemoryArkivRepository('0x0000000000000000000000000000000000000002')
+  const app = buildApp(async () => 123n, { repo, reader })
   try {
     assert.equal((await app.inject('/deals/not-an-address')).statusCode, 400)
     assert.equal((await app.inject('/evidence/not-a-hash')).statusCode, 400)
     assert.equal((await app.inject('/wallets/not-an-address/history')).statusCode, 400)
     assert.equal((await app.inject('/deals/0x0000000000000000000000000000000000000003')).statusCode, 404)
+    const wallet = '0x0000000000000000000000000000000000000004'
+    const deal = { escrow: '0x0000000000000000000000000000000000000005', client: wallet, provider: '0x0000000000000000000000000000000000000006', status: 'active' }
+    await repo.put({ type: 'deal', attributes: { ...deal, last_event_block: 1, last_event_id: 'one' } })
+    await repo.put({ type: 'deal', attributes: { ...deal, last_event_block: 2, last_event_id: 'two' } })
+    assert.equal((await app.inject(`/wallets/${wallet}/history`)).json().deals.length, 1)
   } finally { await app.close() }
 })
 

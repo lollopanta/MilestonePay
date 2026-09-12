@@ -30,6 +30,9 @@ async function collect(client: ReturnType<typeof createArkivPublicClient>, write
   const { eq } = await import("@arkiv-network/sdk/query")
   const builder = client.select({ key: true, attributes: true, payload: true }).createdBy(writer).where(eq("project", PROJECT), eq("schema_version", i32(SCHEMA_VERSION)), eq("entity_type", type), ...(field ? [eq(field, value!)] : []))
   const result: OfficialEntity[] = []
-  for await (const entity of builder) result.push({ id: String(entity.key), type, attributes: entity.attributes as unknown as Record<string, string | number | boolean>, payload: entity.payload as unknown, creator: writer })
+  for await (const entity of builder) {
+    const attributes = Object.fromEntries(Object.entries(entity.attributes ?? {}).map(([key, attribute]) => [key, typeof attribute === "object" && attribute && "value" in attribute ? attribute.value : attribute])) as Record<string, string | number | boolean>
+    result.push({ id: String(entity.key), type, attributes, payload: entity.toJson(), creator: writer })
+  }
   return result
 }
