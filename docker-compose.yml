@@ -4,7 +4,13 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     init: true
-    env_file: .env
+    environment:
+      PORT: ${PORT:-3001}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      FUJI_RPC_URL: ${FUJI_RPC_URL:-https://api.avax-test.network/ext/bc/C/rpc}
+      ARKIV_RPC: ${ARKIV_RPC:-https://rpc.tiramisu.db-chain.testnet.arkiv.network}
+      ARKIV_ACCESS_KEY: ${ARKIV_ACCESS_KEY:-}
+      ARKIV_PRIVATE_KEY: ${ARKIV_PRIVATE_KEY:-}
     ports:
       - "3001:${PORT:-3001}"
     volumes:
@@ -15,6 +21,25 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
+  sync:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    init: true
+    environment:
+      SYNC_INTERVAL_SECONDS: ${SYNC_INTERVAL_SECONDS:-60}
+      FUJI_RPC_URL: ${FUJI_RPC_URL:-https://api.avax-test.network/ext/bc/C/rpc}
+      ARKIV_RPC: ${ARKIV_RPC:-https://rpc.tiramisu.db-chain.testnet.arkiv.network}
+      ARKIV_ACCESS_KEY: ${ARKIV_ACCESS_KEY:-}
+      ARKIV_PRIVATE_KEY: ${ARKIV_PRIVATE_KEY:-}
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          pnpm sync
+          sleep "$${SYNC_INTERVAL_SECONDS}"
+        done
   web:
     build:
       context: .
