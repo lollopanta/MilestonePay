@@ -1,0 +1,40 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    init: true
+    env_file: .env
+    ports:
+      - "3001:${PORT:-3001}"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || 3001) + '/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    init: true
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+      VITE_AVALANCHE_RPC: ${VITE_AVALANCHE_RPC:-}
+      VITE_CHAIN_ID: ${VITE_CHAIN_ID:-43113}
+      VITE_USDT_ADDRESS: ${VITE_USDT_ADDRESS:-}
+      VITE_ESCROW_FACTORY: ${VITE_ESCROW_FACTORY:-}
+      VITE_SWARM_ID_ORIGIN: ${VITE_SWARM_ID_ORIGIN:-https://swarm-id.snaha.net}
+      VITE_SWARM_GATEWAY: ${VITE_SWARM_GATEWAY:-}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/public:/app/apps/web/public
+      - ./apps/web/index.html:/app/apps/web/index.html
+      - ./apps/web/vite.config.ts:/app/apps/web/vite.config.ts
+    depends_on:
+      api:
+        condition: service_healthy

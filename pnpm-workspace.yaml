@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+allowBuilds:
+  esbuild: true
+
+minimumReleaseAgeExclude:
+  - '@snaha/swarm-id@0.4.1'
