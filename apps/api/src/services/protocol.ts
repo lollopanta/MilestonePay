@@ -2,12 +2,13 @@ import { canonicalizeAgreementEvidenceIdentity, canonicalizeChatFeedBinding, can
 import { calculateReputation, type Address as ReputationAddress, type ReputationHistory } from "@milestonepay/reputation"
 import { isAddress, type Address, type Hex } from "viem"
 import { getAgreementIdentities, getAgreementIdentity, getArbiterSwarmIdentity, hasArbiterSwarmIdentityForOtherChain, getChatFeed, getChatFeeds, getDeal, getDisputeEvidenceForDispute, getDisputeEvidenceForSource, getEvidenceDescriptor, getWalletDisputes, getWalletHistory, getWalletSettlements } from "../arkiv/queries.js"
-import { jsonSafe } from "../arkiv/schema.js"
+import { jsonSafe, type EntityType } from "../arkiv/schema.js"
 import type { ArkivRepository } from "../arkiv/writer.js"
 import type { AvalancheReader } from "../indexer/avalanche.js"
 
 const lower = (value: string) => value.toLowerCase()
 const asAddress = (value: string) => value as Address
+const arkivTables: EntityType[] = ["deal", "protocol_event", "settlement", "dispute", "evidence", "agreement_identity", "arbiter_swarm_identity", "agreement_chat_feed", "dispute_evidence", "sync_checkpoint"]
 export class ProtocolError extends Error { constructor(readonly statusCode: 400 | 404 | 409 | 503, message: string) { super(message) } }
 
 export class ProtocolService {
@@ -44,6 +45,10 @@ export class ProtocolService {
       agreements: [...latestDeals.values()].map((deal) => deal.attributes).sort((a, b) => Number(b.last_event_block) - Number(a.last_event_block)).slice(0, 12),
       events: events.map((event) => event.attributes).sort((a, b) => Number(b.block_number) - Number(a.block_number)).slice(0, 16),
     }
+  }
+  async arkivTable(type: EntityType) {
+    const rows = await this.repo.all(type)
+    return { table: type, rows: rows.sort((a, b) => Number(b.attributes.last_event_block ?? b.attributes.block_number ?? b.attributes.registered_at ?? 0) - Number(a.attributes.last_event_block ?? a.attributes.block_number ?? a.attributes.registered_at ?? 0) || String(b.id).localeCompare(String(a.id))).slice(0, 100).map(({ id, creator, attributes }) => ({ id, creator, attributes })) }
   }
   async registerEvidence(descriptor: EvidenceDescriptorV1) {
     const hash = hashEvidenceDescriptor(descriptor)
@@ -146,6 +151,7 @@ export class ProtocolService {
 export function validAddress(value: string): Address { if (!isAddress(value)) throw new ProtocolError(400, "Invalid address"); return asAddress(lower(value)) }
 export function validHash(value: string): Hex { if (!/^0x[\da-fA-F]{64}$/.test(value)) throw new ProtocolError(400, "Invalid evidence hash"); return lower(value) as Hex }
 export function validMilestone(value: string): number { const milestone = Number(value); if (!Number.isSafeInteger(milestone) || milestone < 0) throw new ProtocolError(400, "Invalid milestone"); return milestone }
+export function validArkivTable(value: string): EntityType { if (!arkivTables.includes(value as EntityType)) throw new ProtocolError(404, "Arkiv table not found"); return value as EntityType }
 export function normalizeProtocolHistory(value: { deals: Record<string, unknown>[]; settlements: Record<string, unknown>[] }): ReputationHistory {
   return { deals: value.deals.map((deal) => ({ escrow: asAddress(String(deal.escrow)), client: asAddress(String(deal.client)), provider: asAddress(String(deal.provider)), status: String(deal.status) as "active" | "completed" | "cancelled" })), settlements: value.settlements.map((settlement) => ({ escrow: asAddress(String(settlement.escrow)), client: asAddress(String(settlement.client)), provider: asAddress(String(settlement.provider)), chainId: Number(settlement.chain_id), token: asAddress(String(settlement.token)), providerAmount: BigInt(String(settlement.provider_amount)), clientRefundAmount: BigInt(String(settlement.client_refund_amount)), type: String(settlement.kind) as "approved" | "timeout" | "dispute" })) }
 }

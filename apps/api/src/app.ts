@@ -3,7 +3,7 @@ import cors from '@fastify/cors'
 import { getArkivBlockNumber } from './arkiv.js'
 import { createArkivRepository, type ArkivRepository } from './arkiv/writer.js'
 import { createAvalancheReader, type AvalancheReader } from './indexer/avalanche.js'
-import { ProtocolError, ProtocolService, validAddress, validHash, validMilestone } from './services/protocol.js'
+import { ProtocolError, ProtocolService, validAddress, validArkivTable, validHash, validMilestone } from './services/protocol.js'
 import { validateAgreementEvidenceIdentity, validateArbiterSwarmIdentity, validateChatFeedBinding, validateDisputeEvidenceSeal, validateEvidenceDescriptor } from '@milestonepay/evidence'
 
 export function buildApp(arkivBlockNumber = getArkivBlockNumber, dependencies?: { repo: ArkivRepository; reader: AvalancheReader }) {
@@ -30,6 +30,7 @@ export function buildApp(arkivBlockNumber = getArkivBlockNumber, dependencies?: 
   app.get('/wallets/:address/history', async (request) => service().history(validAddress((request.params as { address: string }).address)))
   app.get('/wallets/:address/reputation', async (request) => service().reputation(validAddress((request.params as { address: string }).address)))
   app.get('/arkiv/dashboard', async () => service().arkivDashboard())
+  app.get('/arkiv/tables/:table', async (request) => service().arkivTable(validArkivTable((request.params as { table: string }).table)))
   app.get('/evidence/:hash', async (request) => service().evidence(validHash((request.params as { hash: string }).hash)))
   app.post('/evidence', async (request) => { try { validateEvidenceDescriptor(request.body) } catch { throw new ProtocolError(400, 'Invalid evidence descriptor') }; return service().registerEvidence(request.body) })
   app.post('/arbiter-identities', async (request) => { try { validateArbiterSwarmIdentity(request.body) } catch { throw new ProtocolError(400, 'Invalid arbiter Swarm identity') }; return service().registerArbiterSwarmIdentity(request.body) })

@@ -1,21 +1,30 @@
 import { useQuery } from "@tanstack/react-query"
+import { useMemo, useState } from "react"
 import { RiDatabase2Line, RiErrorWarningLine, RiRefreshLine } from "@remixicon/react"
 import { Link } from "react-router"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { StatusBadge, WalletAddress } from "@/components/ui/financial"
+import { Input } from "@/components/ui/input"
 import { LoadingState, MetricCard, PageHeader, SectionHeader } from "@/components/ui/page"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 type Dashboard = { summary: Record<"agreements" | "evidence" | "agreementIdentities" | "arbiterIdentities" | "disputes" | "events", number>; agreements: Record<string, string | number>[]; events: Record<string, string | number>[] }
+const tables = ["deal", "protocol_event", "settlement", "dispute", "evidence", "agreement_identity", "arbiter_swarm_identity", "agreement_chat_feed", "dispute_evidence", "sync_checkpoint"] as const
+type ArkivTable = typeof tables[number]
+type ArkivRows = { table: ArkivTable; rows: { id: string; creator: string; attributes: Record<string, string | number | boolean> }[] }
 const base = (import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "")
 async function loadDashboard() { const response = await fetch(`${base}/arkiv/dashboard`); if (!response.ok) throw new Error("Arkiv dashboard is unavailable"); return response.json() as Promise<Dashboard> }
+async function loadTable(table: ArkivTable) { const response = await fetch(`${base}/arkiv/tables/${table}`); if (!response.ok) throw new Error("Arkiv table is unavailable"); return response.json() as Promise<ArkivRows> }
 const status = (value: unknown) => ["active", "pending", "completed", "disputed", "cancelled"].includes(String(value)) ? String(value) as "active" | "pending" | "completed" | "disputed" | "cancelled" : "neutral"
 const short = (value?: string | number) => typeof value === "string" && value.startsWith("0x") ? `${value.slice(0, 6)}…${value.slice(-4)}` : "—"
 
 export function ArkivPage() {
+  const [table, setTable] = useState<ArkivTable>("deal")
+  const [filter, setFilter] = useState("")
   const dashboard = useQuery({ queryKey: ["arkiv-dashboard"], queryFn: loadDashboard, refetchInterval: 15_000 })
+  const tableData = useQuery({ queryKey: ["arkiv-table", table], queryFn: () => loadTable(table), refetchInterval: 15_000 })
   const data = dashboard.data
   const summary = data?.summary
   const composition: [string, number][] = summary ? [["Protocol events", summary.events], ["Agreements", summary.agreements], ["Evidence", summary.evidence], ["Agreement identities", summary.agreementIdentities], ["Arbiter identities", summary.arbiterIdentities], ["Disputes", summary.disputes]] : []
@@ -28,6 +37,12 @@ export function ArkivPage() {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,.75fr)]"><Card><CardHeader><CardTitle>Indexed entity mix</CardTitle></CardHeader><CardContent className="flex flex-col gap-4">{composition.map(([label, value]) => <div key={label}><div className="mb-1 flex justify-between gap-3 text-sm"><span>{label}</span><span className="font-medium tabular-nums">{value}</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${(value / maximum) * 100}%` }} /></div></div>)}</CardContent></Card><Card><CardHeader><CardTitle>Source scope</CardTitle></CardHeader><CardContent className="flex gap-3 text-sm text-muted-foreground"><RiDatabase2Line className="mt-0.5 shrink-0" />This view reads the trusted Arkiv writer’s public entity attributes. Counts refresh every 15 seconds; absence means no entity is currently indexed, not zero on-chain activity.</CardContent></Card></section>
       <section className="flex flex-col gap-4"><SectionHeader title="Recent agreements" description="Latest materialized escrow state from Arkiv." />{data?.agreements.length ? <Card className="overflow-hidden"><CardContent className="px-0"><Table><TableHeader><TableRow><TableHead>Escrow</TableHead><TableHead>Client</TableHead><TableHead className="hidden md:table-cell">Provider</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Block</TableHead></TableRow></TableHeader><TableBody>{data.agreements.map((agreement) => <TableRow key={String(agreement.escrow)}><TableCell><Link className="font-mono text-xs text-primary hover:underline" to={`/deal/${agreement.escrow}`}>{short(agreement.escrow)}</Link></TableCell><TableCell><WalletAddress address={String(agreement.client)} /></TableCell><TableCell className="hidden md:table-cell"><WalletAddress address={String(agreement.provider)} /></TableCell><TableCell><StatusBadge status={status(agreement.status)} /></TableCell><TableCell className="text-right tabular-nums">{Number(agreement.last_event_block ?? 0).toLocaleString()}</TableCell></TableRow>)}</TableBody></Table></CardContent></Card> : <EmptyArkiv label="No indexed agreements yet" />}</section>
       <section className="flex flex-col gap-4"><SectionHeader title="Protocol event timeline" description="Most recent public events written by the Avalanche indexer." />{data?.events.length ? <Card><CardContent className="flex flex-col gap-0">{data.events.map((event, index) => <div className="flex items-center justify-between gap-4 border-b py-3 text-sm last:border-0" key={`${event.tx_hash}-${event.log_index}-${index}`}><div className="min-w-0"><p className="font-medium">{String(event.event_name ?? "Protocol event").replace(/([a-z])([A-Z])/g, "$1 $2")}</p><p className="font-mono text-xs text-muted-foreground">{short(event.escrow)} · {short(event.tx_hash)}</p></div><span className="shrink-0 text-xs text-muted-foreground">Block {Number(event.block_number ?? 0).toLocaleString()}</span></div>)}</CardContent></Card> : <EmptyArkiv label="No indexed events yet" />}</section></>}
+      <ArkivTableViewer table={table} setTable={setTable} filter={filter} setFilter={setFilter} data={tableData.data} loading={tableData.isPending} error={tableData.isError} />
   </main>
 }
 function EmptyArkiv({ label }: { label: string }) { return <Card><CardContent className="py-10 text-center text-sm text-muted-foreground">{label}</CardContent></Card> }
+function ArkivTableViewer({ table, setTable, filter, setFilter, data, loading, error }: { table: ArkivTable; setTable: (table: ArkivTable) => void; filter: string; setFilter: (value: string) => void; data?: ArkivRows; loading: boolean; error: boolean }) {
+  const rows = useMemo(() => (data?.rows ?? []).filter((row) => JSON.stringify(row).toLowerCase().includes(filter.toLowerCase())), [data, filter])
+  const columns = useMemo(() => [...new Set(rows.flatMap((row) => Object.keys(row.attributes)))], [rows])
+  return <section className="flex flex-col gap-4"><SectionHeader title="Arkiv table viewer" description="Browse the indexed public attributes exactly as stored by the trusted MilestonePay writer." /><Card><CardHeader className="gap-4"><div className="flex flex-wrap gap-2">{tables.map((item) => <Button key={item} size="sm" variant={item === table ? "default" : "outline"} onClick={() => { setTable(item); setFilter("") }}>{item.replaceAll("_", " ")}</Button>)}</div><div className="flex items-center justify-between gap-3"><Input aria-label="Filter Arkiv table" className="max-w-sm" value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="Filter rows by any public value" /><span className="text-xs text-muted-foreground">{rows.length}{data && rows.length !== data.rows.length ? ` of ${data.rows.length}` : ""} rows · latest 100</span></div></CardHeader><CardContent className="overflow-x-auto px-0">{loading ? <LoadingState rows={3} /> : error ? <p className="px-6 py-8 text-sm text-destructive">This Arkiv table could not be loaded.</p> : rows.length ? <Table><TableHeader><TableRow><TableHead>Entity ID</TableHead>{columns.map((column) => <TableHead key={column}>{column.replaceAll("_", " ")}</TableHead>)}</TableRow></TableHeader><TableBody>{rows.map((row) => <TableRow key={row.id}><TableCell className="max-w-44 truncate font-mono text-xs" title={row.id}>{row.id}</TableCell>{columns.map((column) => <TableCell className="max-w-64 truncate font-mono text-xs" key={column} title={String(row.attributes[column] ?? "")}>{String(row.attributes[column] ?? "—")}</TableCell>)}</TableRow>)}</TableBody></Table> : <p className="px-6 py-8 text-sm text-muted-foreground">No public rows match this table and filter.</p>}</CardContent></Card></section>
+}
