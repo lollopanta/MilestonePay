@@ -1,10 +1,20 @@
 import { useQuery } from "@tanstack/react-query"
-import { RiErrorWarningLine, RiShieldCheckLine } from "@remixicon/react"
+import {
+  RiErrorWarningLine,
+  RiSearchLine,
+  RiShieldCheckLine,
+} from "@remixicon/react"
+import { type FormEvent, useState } from "react"
+import { useNavigate } from "react-router"
 import { isAddress } from "viem"
+import { normalize } from "viem/ens"
 import { useAccount } from "wagmi"
+import { getPublicClient } from "wagmi/actions"
+import { mainnet } from "wagmi/chains"
 
 import { ReputationSignal } from "@/components/reputation/reputation-signal"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyDescription,
@@ -12,11 +22,17 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getReputation } from "@/features/reputation/api"
+import { wagmiConfig } from "@/web3/config"
 
 export function ReputationPage({ address }: { address?: string }) {
   const { address: connectedAddress } = useAccount()
+  const navigate = useNavigate()
+  const [search, setSearch] = useState("")
+  const [searchError, setSearchError] = useState<string>()
+  const [isSearching, setIsSearching] = useState(false)
   const targetAddress = address ?? connectedAddress
   const query = useQuery({
     queryKey: ["reputation", targetAddress],
@@ -24,22 +40,25 @@ export function ReputationPage({ address }: { address?: string }) {
     queryFn: ({ signal }) => getReputation(targetAddress!, signal),
   })
 
-  if (!targetAddress) {
-    return (
-      <ReputationEmpty
-        title="Select a wallet"
-        description="Connect a wallet or open a wallet-specific reputation link."
-      />
-    )
-  }
+  async function findReputation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const target = search.trim()
+    if (!target) return setSearchError("Enter a wallet address or ENS name.")
+    if (isAddress(target)) return navigate(`/reputation/${target}`)
 
-  if (!isAddress(targetAddress)) {
-    return (
-      <ReputationEmpty
-        title="Wallet unavailable"
-        description="The wallet address in this link is not valid."
-      />
-    )
+    setIsSearching(true)
+    setSearchError(undefined)
+    try {
+      const client = getPublicClient(wagmiConfig, { chainId: mainnet.id })
+      const resolved = await client?.getEnsAddress({ name: normalize(target) })
+      if (!resolved)
+        return setSearchError("No wallet was found for that ENS name.")
+      navigate(`/reputation/${resolved}`)
+    } catch {
+      setSearchError("Enter a valid wallet address or ENS name.")
+    } finally {
+      setIsSearching(false)
+    }
   }
 
   return (
@@ -52,20 +71,61 @@ export function ReputationPage({ address }: { address?: string }) {
           Reputation
         </h1>
       </header>
-      {query.isPending ? <ReputationSkeleton /> : null}
-      {query.isError ? (
+      <form
+        className="flex flex-col gap-3 sm:flex-row"
+        onSubmit={findReputation}
+      >
+        <label className="sr-only" htmlFor="reputation-search">
+          Wallet address or ENS name
+        </label>
+        <Input
+          id="reputation-search"
+          autoComplete="off"
+          value={search}
+          placeholder="Wallet address or ENS name (vitalik.eth)"
+          onChange={(event) => setSearch(event.target.value)}
+          aria-invalid={Boolean(searchError)}
+        />
+        <Button className="shrink-0" disabled={isSearching} type="submit">
+          <RiSearchLine data-icon="inline-start" />
+          {isSearching ? "Resolving" : "Search reputation"}
+        </Button>
+      </form>
+      {searchError ? (
         <Alert variant="destructive">
           <RiErrorWarningLine aria-hidden="true" />
-          <AlertTitle>Reputation unavailable</AlertTitle>
-          <AlertDescription>
-            Protocol history could not be loaded. Check the API connection and
-            try again.
-          </AlertDescription>
+          <AlertTitle>Search unavailable</AlertTitle>
+          <AlertDescription>{searchError}</AlertDescription>
         </Alert>
       ) : null}
-      {query.data ? (
-        <ReputationSignal address={targetAddress} reputation={query.data} />
-      ) : null}
+      {!targetAddress ? (
+        <ReputationEmpty
+          title="Select a wallet"
+          description="Search for a wallet or ENS name, or connect a wallet."
+        />
+      ) : !isAddress(targetAddress) ? (
+        <ReputationEmpty
+          title="Wallet unavailable"
+          description="The wallet address in this link is not valid."
+        />
+      ) : (
+        <>
+          {query.isPending ? <ReputationSkeleton /> : null}
+          {query.isError ? (
+            <Alert variant="destructive">
+              <RiErrorWarningLine aria-hidden="true" />
+              <AlertTitle>Reputation unavailable</AlertTitle>
+              <AlertDescription>
+                Protocol history could not be loaded. Check the API connection
+                and try again.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {query.data ? (
+            <ReputationSignal address={targetAddress} reputation={query.data} />
+          ) : null}
+        </>
+      )}
     </main>
   )
 }

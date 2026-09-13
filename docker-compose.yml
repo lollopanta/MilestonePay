@@ -57,6 +57,8 @@ services:
       - ./apps/web/public:/app/apps/web/public
       - ./apps/web/index.html:/app/apps/web/index.html
       - ./apps/web/vite.config.ts:/app/apps/web/vite.config.ts
+      # Keep workspace evidence exports current for Vite during development.
+      - ./packages/evidence:/app/packages/evidence
     depends_on:
       api:
         condition: service_healthy

@@ -98,6 +98,8 @@ function transactionError(error: unknown, action: string) {
     return "Evidence has already been recorded for this party."
   if (/ReviewPeriod/i.test(message))
     return "This action is no longer available in the review period."
+  if (/Agreement Swarm identity is already bound/i.test(message))
+    return "This role already has a different Swarm identity bound. Reconnect that Swarm ID to continue."
   return `Could not ${action.toLowerCase()}. Check the agreement state and try again.`
 }
 
@@ -262,11 +264,35 @@ export function Deal() {
     if (!wallet || !escrowAddress || !provider || !sameAddress(wallet, provider)) return
     const providerWallet = wallet as Address
     try {
-      const swarmPublicKey = currentSwarmPublicKey(await getSwarmIdClient())
+      const swarm = await getSwarmIdClient()
+      if (!(await swarm.checkAuthStatus()).authenticated) {
+        await swarm.connect({ popupMode: "popup" })
+        setTransaction({ label: "Finish signing in with Swarm ID in the popup, then connect your private identity again.", state: "confirm" })
+        return
+      }
+      const swarmPublicKey = currentSwarmPublicKey(swarm)
       const signature = await signMessage(wagmiConfig, { message: evidenceIdentityMessage(providerWallet, swarmPublicKey, avalancheFuji.id) })
       await bindAgreementIdentity({ version: 1, chainId: avalancheFuji.id, escrow: escrowAddress, role: "provider", identity: { wallet: providerWallet, swarmPublicKey, signature } })
       setTransaction({ label: "Provider private identity connected", state: "success" })
     } catch (error) { setTransaction({ label: transactionError(error, "connect private identity"), state: "error" }) }
+  }
+  async function repairCurrentIdentity() {
+    const data = escrow.data
+    if (!wallet || !data || !escrowAddress) return
+    const role = sameAddress(wallet, data.client) ? "client" : sameAddress(wallet, data.provider) ? "provider" : sameAddress(wallet, data.arbiter) ? "arbiter" : undefined
+    if (!role) return setTransaction({ label: "Only an agreement participant can register a private identity", state: "error" })
+    try {
+      const swarm = await getSwarmIdClient()
+      if (!(await swarm.checkAuthStatus()).authenticated) {
+        await swarm.connect({ popupMode: "popup" })
+        setTransaction({ label: "Finish signing in with Swarm ID in the popup, then register your identity again.", state: "confirm" })
+        return
+      }
+      const swarmPublicKey = currentSwarmPublicKey(swarm)
+      const signature = await signMessage(wagmiConfig, { message: evidenceIdentityMessage(wallet, swarmPublicKey, avalancheFuji.id) })
+      await bindAgreementIdentity({ version: 1, chainId: avalancheFuji.id, escrow: escrowAddress, role, identity: { wallet, swarmPublicKey, signature } })
+      setTransaction({ label: `${role[0].toUpperCase()}${role.slice(1)} private identity registered`, state: "success" })
+    } catch (error) { setTransaction({ label: transactionError(error, "register private identity"), state: "error" }) }
   }
   async function submitAdditionalDisputeEvidence() {
     const data = escrow.data
@@ -286,16 +312,7 @@ export function Deal() {
     try {
       const [identities, source] = await Promise.all([agreementIdentities(escrowAddress), evidenceDescriptor(current.evidenceHash)])
       const arbiter = identities.arbiter.binding.identity.swarmPublicKey
-      const cacheKey = `milestonepay:sealed-act:${source.evidenceHash}:${arbiter.toLowerCase()}`
-      const cached = localStorage.getItem(cacheKey)
-      let updated: { historyReference: string; actReference: string }
-      if (cached) updated = JSON.parse(cached) as typeof updated
-      else {
-        const result = await (await getEvidenceClient()).addGrantees(source.descriptor, [arbiter])
-        if (!result.patched) throw new Error("ACT grantee state changed; retry from the sealed dispute record")
-        updated = result
-        localStorage.setItem(cacheKey, JSON.stringify(updated))
-      }
+      const updated = await (await getEvidenceClient()).addGrantees(source.descriptor, [arbiter])
       const snapshot = {
         version: 1 as const,
         kind: "dispute-provider" as const,
@@ -535,7 +552,7 @@ export function Deal() {
                 : transaction?.state === "success"
                   ? "Transaction confirmed"
                   : transaction?.state === "error"
-                    ? "Action unavailable"
+                    ? "Action needed"
                     : "Agreement update"}
           </AlertTitle>
           <AlertDescription>
@@ -924,6 +941,12 @@ export function Deal() {
               <AddressRow label="Arbiter" address={data.arbiter} />
             </CardContent>
           </Card>
+          {import.meta.env.DEV && (isParticipant || isArbiter) ? (
+            <Card size="sm">
+              <CardHeader><CardTitle>Debug: repair private identity</CardTitle><CardDescription>Registers the connected participant’s signed Swarm identity in Arkiv. Each role must do this from its own wallet.</CardDescription></CardHeader>
+              <CardFooter><Button variant="outline" disabled={actionPending} onClick={repairCurrentIdentity}>Register my identity</Button></CardFooter>
+            </Card>
+          ) : null}
           {sameAddress(wallet, data.provider) && (
             <Card size="sm">
               <CardHeader><CardTitle>Private communication</CardTitle><CardDescription>Connect your Swarm identity before sending private deliveries or chat.</CardDescription></CardHeader>

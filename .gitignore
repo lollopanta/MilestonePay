@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+demo/out/
 .env.*
 !.env.example
 *.log

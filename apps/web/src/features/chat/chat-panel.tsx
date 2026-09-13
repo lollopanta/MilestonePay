@@ -8,7 +8,7 @@ import { loadChatMessages, sendChatMessage } from "./swarm"
 export function ChatPanel({ escrow, chainId, wallet, role }: { escrow: Address; chainId: number; wallet?: Address; role: "client" | "provider" | "arbiter" | "observer" }) {
   const [text, setText] = useState(""); const [error, setError] = useState<string>(); const [sending, setSending] = useState(false)
   const participant = role === "client" || role === "provider"
-  const query = useQuery({ queryKey: ["private-chat", escrow, chainId], enabled: participant, queryFn: () => loadChatMessages(escrow, chainId) })
+  const query = useQuery({ queryKey: ["private-chat", escrow, chainId], enabled: participant, queryFn: () => loadChatMessages(escrow, chainId), refetchInterval: () => document.hidden ? false : 5_000 })
   const refresh = async () => { await query.refetch() }
   if (!participant) return <p className="text-sm text-muted-foreground">{role === "arbiter" ? "Private conversation between the agreement participants. Chat is not automatically shared with the arbiter." : "Only agreement participants can read private chat."}</p>
   const queryError = query.error instanceof Error ? query.error.message : undefined

@@ -46,7 +46,11 @@ async function readFeed(escrow: Address, chainId: number, role: Role, binding: A
   const reader = swarm.makeSequentialFeedReader({ topic: binding.topic, owner: binding.feedOwner })
   if ((await reader.getOwner()).toLowerCase() !== binding.feedOwner.toLowerCase()) return []
   let latest: { feedIndex: string }
-  try { latest = await reader.downloadRawPayload() } catch { return [] }
+  try { latest = await reader.downloadRawPayload() } catch (error) {
+    const message = error instanceof Error ? error.message : ""
+    if (/not found|404|feed.*exist/i.test(message)) return []
+    throw new Error("Swarm chat feed is unavailable. Check your connection and try again.", { cause: error })
+  }
   const last = BigInt(latest.feedIndex)
   const first = last > 49n ? last - 49n : 0n
   const messages = await Promise.all(Array.from({ length: Number(last - first + 1n) }, async (_, offset) => {
