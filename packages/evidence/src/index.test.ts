@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { privateKeyToAccount } from "viem/accounts"
-import { canonicalizeAgreementEvidenceIdentity, canonicalizeDisputeEvidenceSnapshot, canonicalizeEvidenceDescriptor, createEvidenceClient, evidenceIdentityMessage, hashAgreementEvidenceIdentity, hashDisputeEvidenceSnapshot, hashEvidenceDescriptor, validateEvidenceDescriptor, verifyAgreementEvidenceIdentity, type AgreementEvidenceIdentityV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "./index.js"
+import { canonicalizeAgreementEvidenceIdentity, canonicalizeDisputeEvidenceSnapshot, canonicalizeEvidenceDescriptor, createEvidenceClient, decodeMilestoneEvidenceBundle, encodeMilestoneEvidenceBundle, evidenceIdentityMessage, hashAgreementEvidenceIdentity, hashDisputeEvidenceSnapshot, hashEvidenceDescriptor, sha256, validateEvidenceDescriptor, verifyAgreementEvidenceIdentity, type AgreementEvidenceIdentityV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "./index.js"
 
 const descriptor: EvidenceDescriptorV1 = { version: 1, kind: "milestone", chainId: 43113, escrow: "0x0000000000000000000000000000000000000001", milestoneId: 0, act: { encryptedReference: "a".repeat(64), historyReference: "b".repeat(64), publisherPublicKey: `02${"c".repeat(64)}`, actReference: "d".repeat(64) }, createdAt: 1_700_000_000 }
 
@@ -59,4 +59,15 @@ test("an ACT patch failure leaves evidence unsealed and retryable", async () => 
     actRevokeGrantees: async () => ({ encryptedReference: "", historyReference: "", actReference: "" }),
   })
   await assert.rejects(() => client.addGrantees(descriptor, [`02${"e".repeat(64)}`]))
+})
+
+test("private delivery bundles preserve notes, multiple files, integrity, and legacy text", async () => {
+  const first = new TextEncoder().encode("first")
+  const second = new TextEncoder().encode("second")
+  const encoded = await encodeMilestoneEvidenceBundle({ note: "Private delivery", attachments: [{ name: "../first.txt", type: "text/plain", bytes: first, sha256: await sha256(first) }, { name: "second.txt", type: "text/plain", bytes: second, sha256: await sha256(second) }] })
+  const decoded = await decodeMilestoneEvidenceBundle(encoded)
+  assert.equal(decoded.note, "Private delivery")
+  assert.deepEqual(decoded.attachments.map((file) => file.name), [".._first.txt", "second.txt"])
+  assert.equal((await decodeMilestoneEvidenceBundle(new TextEncoder().encode("old text-only note"))).note, "old text-only note")
+  await assert.rejects(() => decodeMilestoneEvidenceBundle(new TextEncoder().encode('{"version":1,"note":"x","attachments":[{"name":"x","type":"text/plain","data":"eA==","sha256":"' + "0".repeat(64) + '"}]}')))
 })

@@ -49,7 +49,7 @@ export class ProtocolService {
     if (binding.chainId !== this.reader.chainId || !await this.reader.isEscrow(binding.escrow)) throw new ProtocolError(404, "Canonical deal not found")
     if (!await verifyAgreementEvidenceIdentity(binding)) throw new ProtocolError(400, "Invalid signed Swarm identity")
     const state = await this.reader.readEscrow(binding.escrow)
-    const expected = binding.role === "client" ? state.client : state.arbiter
+    const expected = binding.role === "client" ? state.client : binding.role === "provider" ? state.provider : state.arbiter
     if (lower(binding.identity.wallet) !== lower(expected)) throw new ProtocolError(400, "Swarm identity does not belong to the agreement role")
     const existing = await getAgreementIdentity(this.repo, binding.escrow, binding.role)
     if (existing) {
@@ -63,8 +63,9 @@ export class ProtocolService {
   async agreementIdentities(escrow: Address) {
     if (!await this.reader.isEscrow(escrow)) throw new ProtocolError(404, "Deal not found")
     const [client, arbiter] = await getAgreementIdentities(this.repo, escrow)
+    const provider = await getAgreementIdentity(this.repo, escrow, "provider")
     if (!client || !arbiter) throw new ProtocolError(404, "Agreement Swarm identities have not been bound")
-    return { client: { commitment: client.attributes.commitment, binding: client.payload }, arbiter: { commitment: arbiter.attributes.commitment, binding: arbiter.payload } }
+    return { client: { commitment: client.attributes.commitment, binding: client.payload }, ...(provider ? { provider: { commitment: provider.attributes.commitment, binding: provider.payload } } : {}), arbiter: { commitment: arbiter.attributes.commitment, binding: arbiter.payload } }
   }
   async registerDisputeEvidence(seal: DisputeEvidenceSealV1) {
     const { snapshot } = seal

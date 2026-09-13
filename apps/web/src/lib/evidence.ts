@@ -36,7 +36,10 @@ export function getSwarmIdClient() {
 }
 
 export async function getEvidenceClient() {
-  return createEvidenceClient((await getSwarmIdClient()) as SwarmActClient)
+  const client = await getSwarmIdClient()
+  if (!client.connectionInfo.identity) throw new Error("Connect Swarm ID before protecting private content")
+  if (!client.connectionInfo.canUpload) throw new Error("Swarm ID is connected but cannot upload. Add a postage stamp or use a supported gateway.")
+  return createEvidenceClient(client as SwarmActClient)
 }
 
 const apiUrl = (path: string) => `${(import.meta.env.VITE_API_URL || "http://localhost:3001").replace(/\/$/, "")}${path}`
@@ -54,7 +57,7 @@ export function currentSwarmPublicKey(client: SwarmIdClient) {
 }
 
 type BoundIdentity = { commitment: Hex; binding: AgreementEvidenceIdentityV1 }
-export type AgreementIdentities = { client: BoundIdentity; arbiter: BoundIdentity }
+export type AgreementIdentities = { client: BoundIdentity; provider?: BoundIdentity; arbiter: BoundIdentity }
 
 export function agreementIdentities(escrow: Address) { return api<AgreementIdentities>(`/agreements/${escrow}/identities`) }
 export function bindAgreementIdentity(binding: AgreementEvidenceIdentityV1) { return api(`/agreements/${binding.escrow}/identities`, { method: "POST", body: JSON.stringify(binding) }) }

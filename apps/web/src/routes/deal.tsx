@@ -46,8 +46,8 @@ import {
   progressPercentage,
   sameAddress,
 } from "@/lib/deal"
-import { agreementIdentities, disputeEvidenceStatus, evidenceDescriptor, getEvidenceClient, hashEvidenceNote, registerDisputeEvidence } from "@/lib/evidence"
-import { disputeEvidenceSealMessage } from "@milestonepay/evidence"
+import { agreementIdentities, bindAgreementIdentity, currentSwarmPublicKey, disputeEvidenceStatus, evidenceDescriptor, getEvidenceClient, getSwarmIdClient, registerDisputeEvidence, registerEvidence } from "@/lib/evidence"
+import { decodeMilestoneEvidenceBundle, disputeEvidenceSealMessage, evidenceIdentityMessage, MAX_EVIDENCE_ATTACHMENT_BYTES } from "@milestonepay/evidence"
 import { wagmiConfig } from "@/web3/config"
 import { contracts } from "@/web3/contracts"
 
@@ -142,6 +142,7 @@ export function Deal() {
   const escrow = useEscrow(escrowAddress)
   const { address: wallet, chainId } = useAccount()
   const [deliverableNote, setDeliverableNote] = useState("")
+  const [deliveryFiles, setDeliveryFiles] = useState<File[]>([])
   const [disputeNote, setDisputeNote] = useState("")
   const [responseNote, setResponseNote] = useState("")
   const [providerShare, setProviderShare] = useState("70")
@@ -222,18 +223,59 @@ export function Deal() {
       await waitForTransactionReceipt(wagmiConfig, { hash })
       await refresh()
       setTransaction({ label, state: "success" })
+      return true
     } catch (error) {
       console.error(error)
       setTransaction({ label: transactionError(error, label), state: "error" })
+      return false
     }
   }
   async function openDispute() {
     const data = escrow.data
     const current = data?.milestones[Number(data.currentMilestone)]
     if (!wallet || !data || !current || !escrowAddress) return
-    const evidenceHash = hashEvidenceNote(disputeNote)
-    if (!evidenceHash) return
-    return runTransaction("Dispute opened; evidence sealing is pending", () => writeContract(wagmiConfig, { address: escrowAddress, abi: MilestoneEscrowAbi, functionName: "openDispute", args: [data.currentMilestone, evidenceHash] }))
+    if (!disputeNote.trim()) return
+    setTransaction({ label: "Protecting dispute evidence with Swarm", state: "confirm" })
+    try {
+      const identities = await agreementIdentities(escrowAddress)
+      const { descriptor, evidenceHash } = await (await getEvidenceClient()).uploadEvidence(new TextEncoder().encode(disputeNote), { kind: sameAddress(wallet, data.client) ? "dispute-client" : "dispute-provider", chainId: avalancheFuji.id, escrow: escrowAddress, milestoneId: Number(data.currentMilestone), createdAt: Math.floor(Date.now() / 1_000), grantees: [identities.client.binding.identity] })
+      if (await runTransaction("Dispute opened; evidence sealing is pending", () => writeContract(wagmiConfig, { address: escrowAddress, abi: MilestoneEscrowAbi, functionName: "openDispute", args: [data.currentMilestone, evidenceHash] }))) await registerEvidence(descriptor)
+    } catch (error) { setTransaction({ label: transactionError(error, "protect dispute evidence"), state: "error" }) }
+  }
+  async function downloadDelivery() {
+    const current = escrow.data?.milestones[Number(escrow.data.currentMilestone)]
+    if (!current || !hasEvidence(current.evidenceHash)) return
+    setTransaction({ label: "Downloading private delivery", state: "pending" })
+    try {
+      const source = await evidenceDescriptor(current.evidenceHash)
+      const bundle = await decodeMilestoneEvidenceBundle(await (await getEvidenceClient()).downloadEvidence(source.descriptor))
+      for (const attachment of bundle.attachments) {
+        const url = URL.createObjectURL(new Blob([attachment.bytes.slice().buffer], { type: attachment.type || "application/octet-stream" }))
+        const link = document.createElement("a"); link.href = url; link.download = attachment.name; link.click(); URL.revokeObjectURL(url)
+      }
+      setTransaction({ label: bundle.note ? `Private delivery: ${bundle.note}` : "Private delivery downloaded", state: "success" })
+    } catch (error) { setTransaction({ label: transactionError(error, "download private delivery"), state: "error" }) }
+  }
+  async function bindProviderIdentity() {
+    const provider = escrow.data?.provider
+    if (!wallet || !escrowAddress || !provider || !sameAddress(wallet, provider)) return
+    const providerWallet = wallet as Address
+    try {
+      const swarmPublicKey = currentSwarmPublicKey(await getSwarmIdClient())
+      const signature = await signMessage(wagmiConfig, { message: evidenceIdentityMessage(providerWallet, swarmPublicKey, avalancheFuji.id) })
+      await bindAgreementIdentity({ version: 1, chainId: avalancheFuji.id, escrow: escrowAddress, role: "provider", identity: { wallet: providerWallet, swarmPublicKey, signature } })
+      setTransaction({ label: "Provider private identity connected", state: "success" })
+    } catch (error) { setTransaction({ label: transactionError(error, "connect private identity"), state: "error" }) }
+  }
+  async function submitAdditionalDisputeEvidence() {
+    const data = escrow.data
+    if (!wallet || !data || !escrowAddress || !responseNote.trim()) return
+    try {
+      const identities = await agreementIdentities(escrowAddress)
+      const kind = sameAddress(wallet, data.client) ? "dispute-client" as const : "dispute-provider" as const
+      const { descriptor, evidenceHash } = await (await getEvidenceClient()).uploadEvidence(new TextEncoder().encode(responseNote), { kind, chainId: avalancheFuji.id, escrow: escrowAddress, milestoneId: Number(data.currentMilestone), createdAt: Math.floor(Date.now() / 1_000), grantees: [identities.client.binding.identity] })
+      if (await runTransaction("Dispute evidence submitted", () => writeContract(wagmiConfig, { address: escrowAddress, abi: MilestoneEscrowAbi, functionName: "submitDisputeEvidence", args: [data.currentMilestone, evidenceHash] }))) await registerEvidence(descriptor)
+    } catch (error) { setTransaction({ label: transactionError(error, "protect dispute evidence"), state: "error" }) }
   }
   async function sealMilestoneEvidence() {
     const data = escrow.data
@@ -664,20 +706,7 @@ export function Deal() {
                     />
                     <Button
                       disabled={actionPending || !responseNote.trim()}
-                      onClick={() => {
-                        const evidenceHash = hashEvidenceNote(responseNote)
-                        if (!evidenceHash) return
-                        return runTransaction(
-                          "Dispute evidence submitted",
-                          () =>
-                            writeContract(wagmiConfig, {
-                              address: escrowAddress,
-                              abi: MilestoneEscrowAbi,
-                              functionName: "submitDisputeEvidence",
-                              args: [data.currentMilestone, evidenceHash],
-                            })
-                        )
-                      }}
+                      onClick={submitAdditionalDisputeEvidence}
                     >
                       Submit evidence
                     </Button>
@@ -779,8 +808,18 @@ export function Deal() {
                       }
                       placeholder="Describe the delivered work or attach its reference"
                     />
+                    <Input
+                      type="file"
+                      multiple
+                      onChange={(event) => setDeliveryFiles(Array.from(event.target.files ?? []))}
+                      aria-label="Private delivery files"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Private via Swarm ACT. Up to {MAX_EVIDENCE_ATTACHMENT_BYTES / 1024 / 1024} MB per file.
+                      {deliveryFiles.length ? ` ${deliveryFiles.map((file) => `${file.name} (${Math.ceil(file.size / 1024)} KB)`).join(", ")}` : ""}
+                    </p>
                     <Button
-                      disabled={actionPending || !deliverableNote.trim()}
+                      disabled={actionPending || (!deliverableNote.trim() && !deliveryFiles.length)}
                       onClick={() => {
                         approveMilestone.clearMessage()
                         return submitMilestone.submit({
@@ -788,6 +827,7 @@ export function Deal() {
                           provider: data.provider,
                           milestoneId: data.currentMilestone,
                           evidenceNote: deliverableNote,
+                          attachments: deliveryFiles,
                         })
                       }}
                     >
@@ -805,6 +845,9 @@ export function Deal() {
                         {short(current.evidenceHash)}
                       </span>
                     </p>
+                    <Button variant="outline" disabled={actionPending} onClick={downloadDelivery}>
+                      Download private delivery
+                    </Button>
                     <Button
                       disabled={actionPending}
                       onClick={() => {
@@ -880,6 +923,12 @@ export function Deal() {
               <AddressRow label="Arbiter" address={data.arbiter} />
             </CardContent>
           </Card>
+          {sameAddress(wallet, data.provider) && (
+            <Card size="sm">
+              <CardHeader><CardTitle>Private communication</CardTitle><CardDescription>Connect your Swarm identity before sending private deliveries or chat.</CardDescription></CardHeader>
+              <CardFooter><Button variant="outline" disabled={actionPending} onClick={bindProviderIdentity}>Connect private identity</Button></CardFooter>
+            </Card>
+          )}
           {data.status === 1 && (
             <Card size="sm">
               <CardHeader>
@@ -978,7 +1027,7 @@ function AddressRow({ label, address }: { label: string; address: Address }) {
       <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </span>
-      <span className="font-mono text-sm">{short(address)}</span>
+      <Link className="font-mono text-sm underline-offset-4 hover:underline" to={`/reputation/${address}`}>{short(address)}</Link>
     </div>
   )
 }

@@ -61,8 +61,8 @@ export function ReputationSignal({
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            A deterministic protocol-history signal, not a statement of
-            trustworthiness.
+            MilestonePay protocol reputation based on verifiable interaction history.
+            It is not a statement of human trustworthiness.
           </p>
           <Separator />
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">

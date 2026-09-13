@@ -6,6 +6,7 @@ import { waitForTransactionReceipt, writeContract } from "wagmi/actions"
 import { avalancheFuji } from "wagmi/chains"
 
 import { agreementIdentities, getEvidenceClient, registerEvidence } from "@/lib/evidence"
+import { encodeMilestoneEvidenceBundle, MAX_EVIDENCE_ATTACHMENT_BYTES, sha256 } from "@milestonepay/evidence"
 import { sameAddress } from "@/lib/deal"
 import { transactionError } from "@/lib/transaction-error"
 import { wagmiConfig } from "@/web3/config"
@@ -15,6 +16,7 @@ type SubmitArgs = {
   provider: Address
   milestoneId: bigint
   evidenceNote: string
+  attachments: File[]
 }
 
 export function useSubmitMilestone(refetch: () => Promise<unknown>) {
@@ -27,20 +29,27 @@ export function useSubmitMilestone(refetch: () => Promise<unknown>) {
     provider,
     milestoneId,
     evidenceNote,
+    attachments,
   }: SubmitArgs) {
     if (!wallet || !sameAddress(wallet, provider))
       return setMessage("Only the provider can submit this milestone.")
     if (chainId !== avalancheFuji.id)
       return setMessage("Switch to Avalanche Fuji first.")
-    if (!evidenceNote.trim())
-      return setMessage("Add an evidence note before submitting.")
+    if (!evidenceNote.trim() && !attachments.length)
+      return setMessage("Add a delivery note or file before submitting.")
+    if (attachments.some((file) => !file.size || file.size > MAX_EVIDENCE_ATTACHMENT_BYTES))
+      return setMessage(`Each file must be under ${MAX_EVIDENCE_ATTACHMENT_BYTES / 1024 / 1024} MB.`)
 
     setIsPending(true)
     setMessage("Protecting evidence with Swarm ACT")
     try {
       const identities = await agreementIdentities(escrowAddress)
+      const bundle = await Promise.all(attachments.map(async (file) => {
+        const bytes = new Uint8Array(await file.arrayBuffer())
+        return { name: file.name, type: file.type, bytes, sha256: await sha256(bytes) }
+      }))
       const { descriptor, evidenceHash } = await (await getEvidenceClient()).uploadEvidence(
-        new TextEncoder().encode(evidenceNote),
+        await encodeMilestoneEvidenceBundle({ note: evidenceNote, attachments: bundle }),
         {
           kind: "milestone",
           chainId: avalancheFuji.id,

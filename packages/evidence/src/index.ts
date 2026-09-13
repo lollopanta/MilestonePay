@@ -1,3 +1,4 @@
+/* global Buffer, btoa, atob, TextEncoder, TextDecoder, crypto */
 import { isAddress, keccak256, toBytes, verifyMessage, type Address, type Hex } from "viem"
 
 export type EvidenceKind = "milestone" | "dispute-client" | "dispute-provider"
@@ -11,7 +12,7 @@ export type EvidenceDescriptorV1 = {
   act: { encryptedReference: string; historyReference: string; publisherPublicKey: string; actReference: string }
   createdAt: number
 }
-export type AgreementIdentityRole = "client" | "arbiter"
+export type AgreementIdentityRole = "client" | "provider" | "arbiter"
 export type AgreementEvidenceIdentityV1 = {
   version: 1
   chainId: number
@@ -51,7 +52,46 @@ export type SwarmActClient = {
 const reference = /^[0-9a-f]{64,128}$/i
 const publicKey = /^(?:0x)?[0-9a-f]{66}$/i
 const kinds = new Set<EvidenceKind>(["milestone", "dispute-client", "dispute-provider"])
-const identityRoles = new Set<AgreementIdentityRole>(["client", "arbiter"])
+const identityRoles = new Set<AgreementIdentityRole>(["client", "provider", "arbiter"])
+
+export const MAX_EVIDENCE_ATTACHMENT_BYTES = 10 * 1024 * 1024
+export type EvidenceAttachmentV1 = { name: string; type: string; bytes: Uint8Array; sha256: string }
+export type MilestoneEvidenceBundleV1 = { version: 1; note: string; attachments: EvidenceAttachmentV1[] }
+
+// eslint-disable-next-line no-control-regex
+const safeName = (name: string) => name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_").slice(0, 128) || "download"
+const base64 = (bytes: Uint8Array) => typeof Buffer !== "undefined" ? Buffer.from(bytes).toString("base64") : btoa(String.fromCharCode(...bytes))
+const unbase64 = (value: string) => typeof Buffer !== "undefined" ? new Uint8Array(Buffer.from(value, "base64")) : Uint8Array.from(atob(value), (char) => char.charCodeAt(0))
+
+/** Private payload only: this is uploaded under ACT, never sent to Arkiv or Fastify. */
+export async function encodeMilestoneEvidenceBundle(bundle: Omit<MilestoneEvidenceBundleV1, "version">) {
+  if (!bundle.note.trim() && !bundle.attachments.length) throw new Error("Add a delivery note or file")
+  if (bundle.attachments.some((file) => !file.bytes.byteLength || file.bytes.byteLength > MAX_EVIDENCE_ATTACHMENT_BYTES || !/^[a-f0-9]{64}$/i.test(file.sha256))) throw new Error("Invalid delivery attachment")
+  return new TextEncoder().encode(JSON.stringify({ version: 1, note: bundle.note, attachments: bundle.attachments.map((file) => ({ name: safeName(file.name), type: file.type.slice(0, 128), data: base64(file.bytes), sha256: file.sha256 })) }))
+}
+
+export async function decodeMilestoneEvidenceBundle(data: Uint8Array): Promise<MilestoneEvidenceBundleV1> {
+  const text = new TextDecoder().decode(data)
+  // V1 text-only evidence predates bundles and remains readable.
+  if (!text.trim().startsWith("{")) return { version: 1, note: text, attachments: [] }
+  let value: { version?: unknown; note?: unknown; attachments?: unknown }
+  try { value = JSON.parse(text) } catch { throw new Error("Malformed private evidence bundle") }
+  if (value.version !== 1 || typeof value.note !== "string" || !Array.isArray(value.attachments)) throw new Error("Malformed private evidence bundle")
+  const attachments = await Promise.all(value.attachments.map(async (file) => {
+    if (!file || typeof file !== "object") throw new Error("Malformed private evidence attachment")
+    const entry = file as { name?: unknown; type?: unknown; data?: unknown; sha256?: unknown }
+    if (typeof entry.name !== "string" || typeof entry.type !== "string" || typeof entry.data !== "string" || typeof entry.sha256 !== "string" || !/^[a-f0-9]{64}$/i.test(entry.sha256)) throw new Error("Malformed private evidence attachment")
+    const bytes = unbase64(entry.data)
+    if (!bytes.byteLength || bytes.byteLength > MAX_EVIDENCE_ATTACHMENT_BYTES || (await sha256(bytes)) !== entry.sha256.toLowerCase()) throw new Error("Evidence attachment integrity check failed")
+    return { name: safeName(entry.name), type: entry.type, bytes, sha256: entry.sha256.toLowerCase() }
+  }))
+  return { version: 1, note: value.note, attachments }
+}
+
+export async function sha256(data: Uint8Array) {
+  const digest = await crypto.subtle.digest("SHA-256", data as BufferSource)
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
+}
 
 function quoted(value: string) { return JSON.stringify(value) }
 function key(value: string) { return value.replace(/^0x/, "").toLowerCase() }
