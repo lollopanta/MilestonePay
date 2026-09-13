@@ -30,6 +30,21 @@ export class ProtocolService {
     return { deals: matchingDeals.map((deal) => deal.attributes), events: events.map((event) => event.attributes), settlements: settlements.map((settlement) => settlement.attributes), disputes: disputes.map((dispute) => dispute.attributes) }
   }
   async reputation(wallet: Address) { return jsonSafe(calculateReputation(wallet as ReputationAddress, normalizeProtocolHistory(await this.history(wallet)))) }
+  async arkivDashboard() {
+    const [deals, evidence, identities, arbiters, disputes, events] = await Promise.all([
+      this.repo.all("deal"), this.repo.all("evidence"), this.repo.all("agreement_identity"), this.repo.all("arbiter_swarm_identity"), this.repo.all("dispute"), this.repo.all("protocol_event"),
+    ])
+    const latestDeals = new Map<string, typeof deals[number]>()
+    for (const deal of deals) {
+      const escrow = String(deal.attributes.escrow).toLowerCase(); const current = latestDeals.get(escrow)
+      if (!current || Number(deal.attributes.last_event_block) > Number(current.attributes.last_event_block)) latestDeals.set(escrow, deal)
+    }
+    return {
+      summary: { agreements: latestDeals.size, evidence: evidence.length, agreementIdentities: identities.length, arbiterIdentities: arbiters.length, disputes: disputes.length, events: events.length },
+      agreements: [...latestDeals.values()].map((deal) => deal.attributes).sort((a, b) => Number(b.last_event_block) - Number(a.last_event_block)).slice(0, 12),
+      events: events.map((event) => event.attributes).sort((a, b) => Number(b.block_number) - Number(a.block_number)).slice(0, 16),
+    }
+  }
   async registerEvidence(descriptor: EvidenceDescriptorV1) {
     const hash = hashEvidenceDescriptor(descriptor)
     if (descriptor.chainId !== this.reader.chainId || !await this.reader.isEscrow(descriptor.escrow)) throw new ProtocolError(404, "Canonical deal not found")

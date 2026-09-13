@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router"
 import {
   RiAddLine,
   RiDashboardLine,
+  RiDatabase2Line,
   RiPresentationLine,
   RiFileList3Line,
   RiPulseLine,
@@ -32,6 +33,7 @@ import {
 
 const navigation = [
   { label: "Demo", to: "/demo", icon: RiPresentationLine },
+  { label: "Arkiv data", to: "/arkiv", icon: RiDatabase2Line },
   { label: "Dashboard", to: "/", icon: RiDashboardLine },
   { label: "Deals", to: "/deals", icon: RiFileList3Line },
   { label: "Activity", to: "/activity", icon: RiPulseLine },

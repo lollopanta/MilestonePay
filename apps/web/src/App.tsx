@@ -9,6 +9,7 @@ import { ReputationPage } from "@/pages/Reputation"
 import { ExplorerPage } from "@/pages/Explorer"
 import { SwarmIdentity } from "@/routes/swarm-identity"
 import { Demo } from "@/routes/demo"
+import { ArkivPage } from "@/pages/Arkiv"
 
 function ReputationRoute() {
   const { address } = useParams()
@@ -31,6 +32,7 @@ export function App() {
           <Route path="/create" element={<CreateDeal />} />
           <Route path="/swarm-identity" element={<SwarmIdentity />} />
           <Route path="/demo" element={<Demo />} />
+          <Route path="/arkiv" element={<ArkivPage />} />
           <Route path="/deal/:address" element={<Deal />} />
         </Routes>
       </AppShell>

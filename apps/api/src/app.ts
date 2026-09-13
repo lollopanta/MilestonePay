@@ -29,6 +29,7 @@ export function buildApp(arkivBlockNumber = getArkivBlockNumber, dependencies?: 
   app.get('/deals/:escrow', async (request) => service().deal(validAddress((request.params as { escrow: string }).escrow)))
   app.get('/wallets/:address/history', async (request) => service().history(validAddress((request.params as { address: string }).address)))
   app.get('/wallets/:address/reputation', async (request) => service().reputation(validAddress((request.params as { address: string }).address)))
+  app.get('/arkiv/dashboard', async () => service().arkivDashboard())
   app.get('/evidence/:hash', async (request) => service().evidence(validHash((request.params as { hash: string }).hash)))
   app.post('/evidence', async (request) => { try { validateEvidenceDescriptor(request.body) } catch { throw new ProtocolError(400, 'Invalid evidence descriptor') }; return service().registerEvidence(request.body) })
   app.post('/arbiter-identities', async (request) => { try { validateArbiterSwarmIdentity(request.body) } catch { throw new ProtocolError(400, 'Invalid arbiter Swarm identity') }; return service().registerArbiterSwarmIdentity(request.body) })
