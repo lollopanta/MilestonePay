@@ -9,13 +9,14 @@ type Role = "client" | "provider"
 export type LoadedChatMessage = ChatMessageV1 & { feedIndex: string }
 const encoder = new TextEncoder()
 const decode = (data: Uint8Array) => JSON.parse(new TextDecoder().decode(data)) as unknown
+const swarmAddress = (value: string) => `0x${value.replace(/^0x/i, "")}` as Address
 
 export async function ensureChatFeed(escrow: Address, chainId: number, wallet: Address, role: Role) {
   const swarm = await getSwarmIdClient()
   if (!swarm.connectionInfo.identity) throw new Error("Connect Swarm ID to use private chat")
   const topic = chatFeedTopic(chainId, escrow, role)
   const writer = swarm.makeSequentialFeedWriter({ topic })
-  const feedOwner = await writer.getOwner() as Address
+  const feedOwner = swarmAddress(String(await writer.getOwner()))
   const feeds = await getChatFeeds(escrow)
   const existing = feeds[role]
   if (existing) {
@@ -44,7 +45,7 @@ export async function sendChatMessage(input: { escrow: Address; chainId: number;
 async function readFeed(escrow: Address, chainId: number, role: Role, binding: AgreementChatFeedBindingV1): Promise<LoadedChatMessage[]> {
   const swarm = await getSwarmIdClient()
   const reader = swarm.makeSequentialFeedReader({ topic: binding.topic, owner: binding.feedOwner })
-  if ((await reader.getOwner()).toLowerCase() !== binding.feedOwner.toLowerCase()) return []
+  if (swarmAddress(String(await reader.getOwner())).toLowerCase() !== binding.feedOwner.toLowerCase()) return []
   let latest: { feedIndex: string }
   try { latest = await reader.downloadRawPayload() } catch (error) {
     const message = error instanceof Error ? error.message : ""
