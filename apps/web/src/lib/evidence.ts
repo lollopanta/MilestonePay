@@ -35,11 +35,6 @@ export function getSwarmIdClient() {
   return swarmIdPromise
 }
 
-export function swarmIdConnectUrl() {
-  const query = new URLSearchParams({ origin: window.location.origin, appName: "MilestonePay", appDescription: "Private milestone evidence" })
-  return `${swarmIdOrigin}/connect#${query}`
-}
-
 export function secureAppUrl() {
   const url = new URL(window.location.href)
   url.protocol = "https:"
