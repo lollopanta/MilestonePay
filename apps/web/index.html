@@ -5,6 +5,16 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MilestonePay</title>
+    <script>
+      if (window.crypto && !window.crypto.randomUUID) {
+        window.crypto.randomUUID = () => {
+          const bytes = window.crypto.getRandomValues(new Uint8Array(16))
+          bytes[6] = (bytes[6] & 15) | 64
+          bytes[8] = (bytes[8] & 63) | 128
+          return [...bytes].map((byte, index) => ([4, 6, 8, 10].includes(index) ? "-" : "") + byte.toString(16).padStart(2, "0")).join("")
+        }
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
