@@ -42,6 +42,7 @@ const navigation = [
 export function AppShell({ children }: { children: ReactNode }) {
   const { address } = useAccount()
   const { pathname } = useLocation()
+  const isDemo = pathname.startsWith("/demo")
 
   return (
     <SidebarProvider>
@@ -85,11 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarFooter className="p-3 group-data-[collapsible=icon]:hidden">
           <SidebarSeparator />
           <div className="flex flex-col gap-2 px-2 py-2">
-            <span className="text-xs text-muted-foreground">
-              Connected account
-            </span>
-            <WalletAddress address={address} />
-            <WalletButton />
+            {isDemo ? <><span className="text-xs text-muted-foreground">Presentation mode</span><span className="text-sm font-medium">Demo wallet active</span></> : <><span className="text-xs text-muted-foreground">Connected account</span><WalletAddress address={address} /><WalletButton /></>}
           </div>
         </SidebarFooter>
       </Sidebar>
@@ -97,15 +94,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-border px-4 md:px-8">
           <SidebarTrigger />
           <span className="hidden text-sm text-muted-foreground md:block">
-            Avalanche Fuji · Testnet
+            {isDemo ? "MilestonePay Demo Chain" : "Avalanche Fuji · Testnet"}
           </span>
           <Button
             nativeButton={false}
-            render={<Link to="/deals/new" />}
+            render={<Link to={isDemo ? "/demo" : "/deals/new"} />}
             size="sm"
           >
             <RiAddLine data-icon="inline-start" />
-            New agreement
+            {isDemo ? "Demo agreement" : "New agreement"}
           </Button>
         </header>
         <div className="px-5 pt-6 md:hidden">
