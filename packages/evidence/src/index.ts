@@ -11,17 +11,47 @@ export type EvidenceDescriptorV1 = {
   act: { encryptedReference: string; historyReference: string; publisherPublicKey: string; actReference: string }
   createdAt: number
 }
+export type AgreementIdentityRole = "client" | "arbiter"
+export type AgreementEvidenceIdentityV1 = {
+  version: 1
+  chainId: number
+  escrow: Address
+  role: AgreementIdentityRole
+  identity: ParticipantEvidenceIdentity
+}
+/**
+ * The immutable arbitration input. It freezes the ACT version under review;
+ * ACT history cannot revoke a reader's knowledge of an earlier version.
+ */
+export type DisputeEvidenceSnapshotV1 = {
+  version: 1
+  kind: "dispute-client" | "dispute-provider"
+  chainId: number
+  escrow: Address
+  milestoneId: number
+  sourceEvidenceHash: Hex
+  act: EvidenceDescriptorV1["act"]
+  arbiterIdentityCommitment: Hex
+}
+export type DisputeEvidenceSealV1 = {
+  version: 1
+  snapshot: DisputeEvidenceSnapshotV1
+  publisher: Address
+  signature: Hex
+}
 
 export type SwarmActClient = {
   actUploadData(data: Uint8Array, grantees: string[]): Promise<{ encryptedReference: string; historyReference: string; publisherPubKey: string; actReference: string }>
   actDownloadData(encryptedReference: string, historyReference: string, publisherPubKey: string): Promise<Uint8Array>
   actAddGrantees(historyReference: string, grantees: string[]): Promise<{ historyReference: string; actReference: string }>
+  actGetGrantees(historyReference: string): Promise<string[]>
   actRevokeGrantees(historyReference: string, encryptedReference: string, grantees: string[]): Promise<{ encryptedReference: string; historyReference: string; actReference: string }>
 }
 
 const reference = /^[0-9a-f]{64,128}$/i
 const publicKey = /^(?:0x)?[0-9a-f]{66}$/i
 const kinds = new Set<EvidenceKind>(["milestone", "dispute-client", "dispute-provider"])
+const identityRoles = new Set<AgreementIdentityRole>(["client", "arbiter"])
 
 function quoted(value: string) { return JSON.stringify(value) }
 function key(value: string) { return value.replace(/^0x/, "").toLowerCase() }
@@ -35,9 +65,27 @@ export async function verifyEvidenceIdentity(identity: ParticipantEvidenceIdenti
   return isAddress(identity.wallet) && publicKey.test(identity.swarmPublicKey) && await verifyMessage({ address: identity.wallet, message: evidenceIdentityMessage(identity.wallet, identity.swarmPublicKey, chainId), signature: identity.signature })
 }
 
+export function validateAgreementEvidenceIdentity(value: unknown): asserts value is AgreementEvidenceIdentityV1 {
+  const binding = value as AgreementEvidenceIdentityV1
+  if (!binding || binding.version !== 1 || !Number.isSafeInteger(binding.chainId) || binding.chainId <= 0 || !isAddress(binding.escrow) || !identityRoles.has(binding.role) || !binding.identity) throw new Error("Invalid agreement evidence identity")
+}
+
+export async function verifyAgreementEvidenceIdentity(value: AgreementEvidenceIdentityV1) {
+  validateAgreementEvidenceIdentity(value)
+  return verifyEvidenceIdentity(value.identity, value.chainId)
+}
+
+export function canonicalizeAgreementEvidenceIdentity(value: AgreementEvidenceIdentityV1) {
+  validateAgreementEvidenceIdentity(value)
+  const { identity } = value
+  return `{"version":1,"chainId":${value.chainId},"escrow":${quoted(value.escrow.toLowerCase())},"role":${quoted(value.role)},"identity":{"wallet":${quoted(identity.wallet.toLowerCase())},"swarmPublicKey":${quoted(key(identity.swarmPublicKey))},"signature":${quoted(identity.signature.toLowerCase())}}}`
+}
+
+export function hashAgreementEvidenceIdentity(value: AgreementEvidenceIdentityV1): Hex { return keccak256(toBytes(canonicalizeAgreementEvidenceIdentity(value))) }
+
 export function validateEvidenceDescriptor(value: unknown): asserts value is EvidenceDescriptorV1 {
   const d = value as EvidenceDescriptorV1
-  if (!d || d.version !== 1 || !kinds.has(d.kind) || !Number.isSafeInteger(d.chainId) || d.chainId <= 0 || !isAddress(d.escrow) || !Number.isSafeInteger(d.milestoneId) || d.milestoneId < 0 || !Number.isSafeInteger(d.createdAt) || d.createdAt <= 0 || !d.act || !reference.test(d.act.encryptedReference) || !reference.test(d.act.historyReference) || !reference.test(d.act.actReference) || !publicKey.test(d.act.publisherPublicKey)) throw new Error("Invalid evidence descriptor")
+  if (!d || Object.keys(d).length !== 7 || !["version", "kind", "chainId", "escrow", "milestoneId", "act", "createdAt"].every((field) => field in d) || d.version !== 1 || !kinds.has(d.kind) || !Number.isSafeInteger(d.chainId) || d.chainId <= 0 || !isAddress(d.escrow) || !Number.isSafeInteger(d.milestoneId) || d.milestoneId < 0 || !Number.isSafeInteger(d.createdAt) || d.createdAt <= 0 || !d.act || Object.keys(d.act).length !== 4 || !["encryptedReference", "historyReference", "publisherPublicKey", "actReference"].every((field) => field in d.act) || !reference.test(d.act.encryptedReference) || !reference.test(d.act.historyReference) || !reference.test(d.act.actReference) || !publicKey.test(d.act.publisherPublicKey)) throw new Error("Invalid evidence descriptor")
 }
 
 /** Fixed-key JSON is the V1 commitment format; do not replace with arbitrary JSON.stringify. */
@@ -49,6 +97,35 @@ export function canonicalizeEvidenceDescriptor(value: EvidenceDescriptorV1) {
 
 export function hashEvidenceDescriptor(value: EvidenceDescriptorV1): Hex { return keccak256(toBytes(canonicalizeEvidenceDescriptor(value))) }
 
+export function validateDisputeEvidenceSnapshot(value: unknown): asserts value is DisputeEvidenceSnapshotV1 {
+  const snapshot = value as DisputeEvidenceSnapshotV1
+  if (!snapshot || Object.keys(snapshot).length !== 8 || snapshot.version !== 1 || (snapshot.kind !== "dispute-client" && snapshot.kind !== "dispute-provider") || !Number.isSafeInteger(snapshot.chainId) || snapshot.chainId <= 0 || !isAddress(snapshot.escrow) || !Number.isSafeInteger(snapshot.milestoneId) || snapshot.milestoneId < 0 || !/^0x[0-9a-f]{64}$/i.test(snapshot.sourceEvidenceHash) || !/^0x[0-9a-f]{64}$/i.test(snapshot.arbiterIdentityCommitment)) throw new Error("Invalid dispute evidence snapshot")
+  validateEvidenceDescriptor({ version: 1, kind: snapshot.kind, chainId: snapshot.chainId, escrow: snapshot.escrow, milestoneId: snapshot.milestoneId, act: snapshot.act, createdAt: 1 })
+}
+
+export function canonicalizeDisputeEvidenceSnapshot(value: DisputeEvidenceSnapshotV1) {
+  validateDisputeEvidenceSnapshot(value)
+  const snapshot = value
+  return `{"version":1,"kind":${quoted(snapshot.kind)},"chainId":${snapshot.chainId},"escrow":${quoted(snapshot.escrow.toLowerCase())},"milestoneId":${snapshot.milestoneId},"sourceEvidenceHash":${quoted(snapshot.sourceEvidenceHash.toLowerCase())},"act":{"encryptedReference":${quoted(key(snapshot.act.encryptedReference))},"historyReference":${quoted(key(snapshot.act.historyReference))},"publisherPublicKey":${quoted(key(snapshot.act.publisherPublicKey))},"actReference":${quoted(key(snapshot.act.actReference))}},"arbiterIdentityCommitment":${quoted(snapshot.arbiterIdentityCommitment.toLowerCase())}}`
+}
+
+export function hashDisputeEvidenceSnapshot(value: DisputeEvidenceSnapshotV1): Hex { return keccak256(toBytes(canonicalizeDisputeEvidenceSnapshot(value))) }
+
+export function disputeEvidenceSealMessage(snapshot: DisputeEvidenceSnapshotV1) {
+  return `MilestonePay Dispute Evidence Seal v1\nsnapshot: ${hashDisputeEvidenceSnapshot(snapshot)}`
+}
+
+export function validateDisputeEvidenceSeal(value: unknown): asserts value is DisputeEvidenceSealV1 {
+  const seal = value as DisputeEvidenceSealV1
+  if (!seal || Object.keys(seal).length !== 4 || seal.version !== 1 || !isAddress(seal.publisher) || !/^0x[0-9a-f]{130}$/i.test(seal.signature)) throw new Error("Invalid dispute evidence seal")
+  validateDisputeEvidenceSnapshot(seal.snapshot)
+}
+
+export async function verifyDisputeEvidenceSeal(value: DisputeEvidenceSealV1) {
+  validateDisputeEvidenceSeal(value)
+  return verifyMessage({ address: value.publisher, message: disputeEvidenceSealMessage(value.snapshot), signature: value.signature })
+}
+
 export function createEvidenceClient(client: SwarmActClient) {
   return {
     async uploadEvidence(data: Uint8Array, input: Omit<EvidenceDescriptorV1, "version" | "act"> & { grantees: readonly ParticipantEvidenceIdentity[] }) {
@@ -59,7 +136,14 @@ export function createEvidenceClient(client: SwarmActClient) {
       return { descriptor, evidenceHash: hashEvidenceDescriptor(descriptor) }
     },
     downloadEvidence(descriptor: EvidenceDescriptorV1) { validateEvidenceDescriptor(descriptor); return client.actDownloadData(descriptor.act.encryptedReference, descriptor.act.historyReference, descriptor.act.publisherPublicKey) },
-    addGrantees(descriptor: EvidenceDescriptorV1, grantees: readonly string[]) { validateEvidenceDescriptor(descriptor); return client.actAddGrantees(descriptor.act.historyReference, grantees.map(key)) },
+    async addGrantees(descriptor: EvidenceDescriptorV1, grantees: readonly string[]) {
+      validateEvidenceDescriptor(descriptor)
+      const requested = [...new Set(grantees.map(key))]
+      const existing = new Set((await client.actGetGrantees(descriptor.act.historyReference)).map(key))
+      const missing = requested.filter((grantee) => !existing.has(grantee))
+      if (!missing.length) return { historyReference: descriptor.act.historyReference, actReference: descriptor.act.actReference, patched: false }
+      return { ...await client.actAddGrantees(descriptor.act.historyReference, missing), patched: true }
+    },
     revokeGrantees(descriptor: EvidenceDescriptorV1, grantees: readonly string[]) { validateEvidenceDescriptor(descriptor); return client.actRevokeGrantees(descriptor.act.historyReference, descriptor.act.encryptedReference, grantees.map(key)) },
   }
 }

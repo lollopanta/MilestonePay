@@ -3,8 +3,8 @@ import cors from '@fastify/cors'
 import { getArkivBlockNumber } from './arkiv.js'
 import { createArkivRepository, type ArkivRepository } from './arkiv/writer.js'
 import { createAvalancheReader, type AvalancheReader } from './indexer/avalanche.js'
-import { ProtocolError, ProtocolService, validAddress, validHash } from './services/protocol.js'
-import { validateEvidenceDescriptor } from '@milestonepay/evidence'
+import { ProtocolError, ProtocolService, validAddress, validHash, validMilestone } from './services/protocol.js'
+import { validateAgreementEvidenceIdentity, validateDisputeEvidenceSeal, validateEvidenceDescriptor } from '@milestonepay/evidence'
 
 export function buildApp(arkivBlockNumber = getArkivBlockNumber, dependencies?: { repo: ArkivRepository; reader: AvalancheReader }) {
   const app = Fastify({ logger: true })
@@ -31,5 +31,9 @@ export function buildApp(arkivBlockNumber = getArkivBlockNumber, dependencies?: 
   app.get('/wallets/:address/reputation', async (request) => service().reputation(validAddress((request.params as { address: string }).address)))
   app.get('/evidence/:hash', async (request) => service().evidence(validHash((request.params as { hash: string }).hash)))
   app.post('/evidence', async (request) => { try { validateEvidenceDescriptor(request.body) } catch { throw new ProtocolError(400, 'Invalid evidence descriptor') }; return service().registerEvidence(request.body) })
+  app.get('/agreements/:escrow/identities', async (request) => service().agreementIdentities(validAddress((request.params as { escrow: string }).escrow)))
+  app.post('/agreements/:escrow/identities', async (request) => { const escrow = validAddress((request.params as { escrow: string }).escrow); try { validateAgreementEvidenceIdentity(request.body) } catch { throw new ProtocolError(400, 'Invalid agreement Swarm identity') }; if (request.body.escrow.toLowerCase() !== escrow.toLowerCase()) throw new ProtocolError(400, 'Agreement identity escrow mismatch'); return service().bindAgreementIdentity(request.body) })
+  app.post('/dispute-evidence', async (request) => { try { validateDisputeEvidenceSeal(request.body) } catch { throw new ProtocolError(400, 'Invalid dispute evidence seal') }; return service().registerDisputeEvidence(request.body) })
+  app.get('/disputes/:escrow/:milestone/evidence', async (request) => { const params = request.params as { escrow: string; milestone: string }; return service().disputeEvidenceStatus(validAddress(params.escrow), validMilestone(params.milestone)) })
   return app
 }
