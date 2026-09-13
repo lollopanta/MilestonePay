@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi"
 import { avalancheFuji } from "wagmi/chains"
 
@@ -17,6 +17,11 @@ export function WalletButton() {
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
   const [step, setStep] = useState<AccountStep>("idle")
   const [isSwarmConnected, setSwarmConnected] = useState(false)
+  const [isSwarmReady, setSwarmReady] = useState(false)
+
+  useEffect(() => {
+    void getSwarmIdClient().then(() => setSwarmReady(true)).catch(() => setStep("error"))
+  }, [])
 
   async function connectAccount() {
     if (isSwarmConnected) {
@@ -44,9 +49,7 @@ export function WalletButton() {
       }
 
       const swarm = await getSwarmIdClient()
-      if (!(await swarm.checkAuthStatus()).authenticated) {
-        await swarm.connect({ popupMode: "popup" })
-      }
+      if (!swarm.connectionInfo.identity) await swarm.connect({ popupMode: "window" })
       setSwarmConnected(true)
       setStep("idle")
     } catch (error) {
@@ -56,7 +59,7 @@ export function WalletButton() {
   }
 
   const isBusy =
-    isConnecting || isSwitching || ["wallet", "network", "swarm"].includes(step)
+    isConnecting || isSwitching || ["wallet", "network", "swarm"].includes(step) || isConnected && chainId === avalancheFuji.id && !isSwarmReady
   const label = isSwarmConnected
     ? `Disconnect ${address ? shorten(address) : "account"}`
     : !isConnected
@@ -65,6 +68,8 @@ export function WalletButton() {
         : "Connect account"
       : chainId !== avalancheFuji.id
         ? "Switch to Avalanche Fuji"
+        : !isSwarmReady
+          ? "Preparing Swarm ID"
         : step === "error"
           ? "Retry Swarm ID"
           : "Connect Swarm ID"
