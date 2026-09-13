@@ -11,15 +11,14 @@ import { keccak256, toBytes, type Address, type Hex } from "viem"
 
 let swarmId: SwarmIdClient | undefined
 let swarmIdPromise: Promise<SwarmIdClient> | undefined
+const swarmIdOrigin = (import.meta.env.VITE_SWARM_ID_ORIGIN || "https://swarm-id.snaha.net").replace(/\/$/, "")
 
 export function getSwarmIdClient() {
   if (!swarmIdPromise) {
     swarmIdPromise = import("@snaha/swarm-id")
       .then(async ({ SwarmIdClient }) => {
         swarmId = new SwarmIdClient({
-          iframeOrigin:
-            import.meta.env.VITE_SWARM_ID_ORIGIN ||
-            "https://swarm-id.snaha.net",
+          iframeOrigin: swarmIdOrigin,
           metadata: {
             name: "MilestonePay",
             description: "Private milestone evidence",
@@ -34,6 +33,11 @@ export function getSwarmIdClient() {
       })
   }
   return swarmIdPromise
+}
+
+export function swarmIdConnectUrl() {
+  const query = new URLSearchParams({ origin: window.location.origin, appName: "MilestonePay", appDescription: "Private milestone evidence" })
+  return `${swarmIdOrigin}/connect#${query}`
 }
 
 export async function getEvidenceReaderClient() {

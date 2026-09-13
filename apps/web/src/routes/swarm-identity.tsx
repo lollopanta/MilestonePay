@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { WalletButton } from "@/components/wallet-button"
-import { arbiterSwarmIdentity, currentSwarmPublicKey, getSwarmIdClient, registerArbiterSwarmIdentity } from "@/lib/evidence"
+import { arbiterSwarmIdentity, currentSwarmPublicKey, getSwarmIdClient, registerArbiterSwarmIdentity, swarmIdConnectUrl } from "@/lib/evidence"
 import { wagmiConfig } from "@/web3/config"
 import { evidenceIdentityMessage, verifyEvidenceIdentity } from "@milestonepay/evidence"
 
@@ -68,7 +68,7 @@ export function SwarmIdentity() {
         <CardContent className="flex flex-col gap-4 text-sm"><div><span className="text-muted-foreground">Wallet</span><p className="mt-1 break-all font-mono">{address ?? "Connect a wallet"}</p></div><div><span className="text-muted-foreground">Swarm public key</span><p className="mt-1 break-all font-mono">{publicKey || (state === "checking" ? "Checking…" : "Available after connecting Swarm ID")}</p></div>
           {state === "registered" && <Alert><RiCheckLine /><AlertTitle>Identity registered</AlertTitle><AlertDescription>Your current public Swarm identity is ready for Fuji agreements.</AlertDescription></Alert>}
           {error && <Alert variant="destructive"><AlertTitle>Registration needs attention</AlertTitle><AlertDescription>{error}</AlertDescription></Alert>}
-        </CardContent><CardFooter className="justify-end border-t"><Button onClick={register} disabled={!isConnected || state === "working"}>{state === "working" && <Spinner data-icon="inline-start" />}{state === "registered" ? "Update identity" : "Register identity"}</Button></CardFooter>
+        </CardContent><CardFooter className="justify-end gap-3 border-t"><a className="text-sm text-primary hover:underline" href={swarmIdConnectUrl()} target="_blank" rel="noreferrer">Open Swarm ID</a><Button onClick={register} disabled={!isConnected || state === "working"}>{state === "working" && <Spinner data-icon="inline-start" />}{state === "registered" ? "Update identity" : "Register identity"}</Button></CardFooter>
       </Card>
     </div>
   </main>
