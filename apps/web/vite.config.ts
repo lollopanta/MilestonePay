@@ -17,6 +17,8 @@ export default defineConfig({
     },
   },
   plugins: [react(), tailwindcss()],
+  // Workspace packages are built by their own watch process; never cache an old dist export.
+  optimizeDeps: { exclude: ["@milestonepay/evidence"] },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),

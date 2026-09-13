@@ -1,6 +1,44 @@
 # MilestonePay
 
-Trustless milestone-based escrow with private evidence and verifiable reputation.
+MilestonePay lets clients fund a milestone escrow upfront while providers deliver private work, chat privately, and resolve disputes with verifiable settlement history.
+
+## Problem
+
+Freelance milestones need both financial certainty and privacy. Public storage leaks deliverables; centralized chat and file servers weaken the protocol story.
+
+## Solution
+
+Avalanche Fuji holds the financial state. Swarm ACT protects private deliveries and messages. Two participant-owned Swarm sequential feeds persist private-chat pointers. Arkiv indexes only public protocol and discovery metadata. Reputation is a deterministic summary of verifiable interaction history, not a judgement of a person.
+
+## Demo flow
+
+1. Create and fully fund an agreement on Fuji.
+2. Bind participant Swarm identities and exchange private messages.
+3. Provider submits a private note and files; client downloads and approves.
+4. Open a dispute, seal only selected evidence for the arbiter, then resolve on-chain.
+5. Open participant reputation to inspect the resulting protocol history.
+
+## Privacy architecture
+
+```mermaid
+flowchart TD
+  UI[Client / Provider React dApp] --> AVA[Avalanche Fuji\nEscrow, milestones, settlement]
+  UI --> SID[Swarm ID]
+  SID --> ACT[Swarm ACT\nPrivate evidence, files, chat content]
+  SID --> FEED[Sequential feeds\nParticipant chat ordering]
+  UI --> API[Fastify read-only protocol API]
+  API --> ARKIV[Arkiv\nPublic descriptors, identity and feed bindings]
+```
+
+Arkiv never stores chat text, file bytes, ACT secrets, or private Swarm material. Fastify never receives them. An arbiter does not receive normal chat access; they receive only evidence explicitly sealed for a dispute.
+
+## Core features
+
+- Full-upfront Avalanche milestone escrow, approvals, disputes and arbiter settlement.
+- ACT-protected text and multi-file deliveries with integrity verification.
+- Private client/provider chat: ACT content plus participant-owned sequential feeds.
+- Arkiv-backed protocol discovery and deterministic, explainable reputation.
+- Browser storage is optional UI state only; protocol state recovers from Avalanche, Arkiv and Swarm.
 
 MilestonePay is a Fuji-ready ERC-20 milestone escrow with private Swarm ACT evidence transport, a trusted Arkiv protocol index, and deterministic reputation scoring. MockUSDT is a test token only, never Tether USDT.
 

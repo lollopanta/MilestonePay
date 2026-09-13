@@ -77,6 +77,10 @@ export function destroyEvidenceClient() {
   swarmIdPromise = undefined
 }
 
+// Vite replaces this module during development; dispose the old iframe so it
+// cannot keep stale postMessage listeners or a second Swarm ID session alive.
+if (import.meta.hot) import.meta.hot.dispose(() => destroyEvidenceClient())
+
 /** Temporary V1 developer-flow commitment; production evidence uses descriptors above. */
 export function hashEvidenceNote(note: string): Hex | undefined {
   const trimmed = note.trim()

@@ -12,4 +12,4 @@ COPY packages/evidence packages/evidence
 RUN pnpm --filter @milestonepay/evidence build
 WORKDIR /app/apps/web
 EXPOSE 5173
-CMD ["pnpm", "dev"]
+CMD ["sh", "-c", "pnpm --dir /app/packages/evidence dev & exec pnpm dev"]

@@ -1,16 +1,24 @@
 {
   "name": "milestonepay",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@12.4.1",
-  "engines": { "node": ">=22.18.0" },
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
+    "demo:record": "pnpm --filter @milestonepay/web exec tsx ../../demo/record.ts",
+    "demo:captions": "pnpm --filter @milestonepay/web exec tsx ../../demo/captions.ts",
     "env:check": "node apps/api/scripts/env-check.mjs",
     "contracts:export": "pnpm --dir packages/contracts export",
     "api:sync": "pnpm --filter @milestonepay/api sync",
     "contracts:sync-fuji": "pnpm contracts:export && pnpm --dir packages/contracts sync-fuji"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }
