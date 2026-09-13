@@ -4,6 +4,13 @@ const latest = <T extends { attributes: Record<string, string | number | boolean
 export const getDeal = async (repo: ArkivRepository, escrow: Address) => latest(await repo.find("deal", "escrow", escrow.toLowerCase()))
 export const getEvidenceDescriptor = async (repo: ArkivRepository, hash: Hex) => latest(await repo.find("evidence", "evidence_hash", hash.toLowerCase()))
 export const getAgreementIdentity = async (repo: ArkivRepository, escrow: Address, role: "client" | "provider" | "arbiter") => (await repo.find("agreement_identity", "identity_id", `${escrow.toLowerCase()}:${role}`)).at(0)
+export async function getArbiterSwarmIdentity(repo: ArkivRepository, wallet: Address, chainId: number) {
+  const records = await repo.find("arbiter_swarm_identity", "wallet", wallet.toLowerCase())
+  return records.filter((record) => Number(record.attributes.chain_id) === chainId).sort((a, b) => Number(b.attributes.registered_at) - Number(a.attributes.registered_at) || String(b.attributes.registration_id).localeCompare(String(a.attributes.registration_id))).at(0)
+}
+export async function hasArbiterSwarmIdentityForOtherChain(repo: ArkivRepository, wallet: Address, chainId: number) {
+  return (await repo.find("arbiter_swarm_identity", "wallet", wallet.toLowerCase())).some((record) => Number(record.attributes.chain_id) !== chainId)
+}
 export const getAgreementIdentities = async (repo: ArkivRepository, escrow: Address) => Promise.all([getAgreementIdentity(repo, escrow, "client"), getAgreementIdentity(repo, escrow, "arbiter")])
 export const getChatFeed = async (repo: ArkivRepository, escrow: Address, role: "client" | "provider") => (await repo.find("agreement_chat_feed", "feed_id", `${escrow.toLowerCase()}:${role}`)).at(0)
 export const getChatFeeds = async (repo: ArkivRepository, escrow: Address) => Promise.all([getChatFeed(repo, escrow, "client"), getChatFeed(repo, escrow, "provider")])

@@ -1,7 +1,7 @@
-import { canonicalizeAgreementEvidenceIdentity, canonicalizeChatFeedBinding, canonicalizeEvidenceDescriptor, canonicalizeDisputeEvidenceSnapshot, chatFeedTopic, verifyChatFeedBinding, hashAgreementEvidenceIdentity, hashEvidenceDescriptor, hashDisputeEvidenceSnapshot, verifyAgreementEvidenceIdentity, verifyDisputeEvidenceSeal, type AgreementChatFeedBindingV1, type AgreementEvidenceIdentityV1, type DisputeEvidenceSealV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "@milestonepay/evidence"
+import { canonicalizeAgreementEvidenceIdentity, canonicalizeChatFeedBinding, canonicalizeEvidenceDescriptor, canonicalizeDisputeEvidenceSnapshot, chatFeedTopic, verifyChatFeedBinding, hashAgreementEvidenceIdentity, hashEvidenceDescriptor, hashDisputeEvidenceSnapshot, verifyAgreementEvidenceIdentity, verifyDisputeEvidenceSeal, verifyEvidenceIdentity, type AgreementChatFeedBindingV1, type AgreementEvidenceIdentityV1, type ArbiterSwarmIdentityV1, type DisputeEvidenceSealV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "@milestonepay/evidence"
 import { calculateReputation, type Address as ReputationAddress, type ReputationHistory } from "@milestonepay/reputation"
 import { isAddress, type Address, type Hex } from "viem"
-import { getAgreementIdentities, getAgreementIdentity, getChatFeed, getChatFeeds, getDeal, getDisputeEvidenceForDispute, getDisputeEvidenceForSource, getEvidenceDescriptor, getWalletDisputes, getWalletHistory, getWalletSettlements } from "../arkiv/queries.js"
+import { getAgreementIdentities, getAgreementIdentity, getArbiterSwarmIdentity, hasArbiterSwarmIdentityForOtherChain, getChatFeed, getChatFeeds, getDeal, getDisputeEvidenceForDispute, getDisputeEvidenceForSource, getEvidenceDescriptor, getWalletDisputes, getWalletHistory, getWalletSettlements } from "../arkiv/queries.js"
 import { jsonSafe } from "../arkiv/schema.js"
 import type { ArkivRepository } from "../arkiv/writer.js"
 import type { AvalancheReader } from "../indexer/avalanche.js"
@@ -45,6 +45,18 @@ export class ProtocolService {
     return { evidenceHash: hash, descriptor }
   }
   async evidence(hash: Hex) { const evidence = await getEvidenceDescriptor(this.repo, hash); if (!evidence) throw new ProtocolError(404, "Evidence descriptor not found"); return { evidenceHash: evidence.attributes.evidence_hash, descriptor: evidence.payload } }
+  async registerArbiterSwarmIdentity(record: ArbiterSwarmIdentityV1) {
+    if (record.chainId !== this.reader.chainId || !await verifyEvidenceIdentity(record.identity, record.chainId)) throw new ProtocolError(400, "Invalid signed arbiter Swarm identity")
+    await this.repo.put({ type: "arbiter_swarm_identity", attributes: { wallet: lower(record.identity.wallet), chain_id: record.chainId, swarm_public_key: lower(record.identity.swarmPublicKey), registered_at: Date.now(), registration_id: lower(record.identity.signature) }, payload: record })
+    return record
+  }
+  async arbiterSwarmIdentity(wallet: Address, chainId: number) {
+    if (chainId !== this.reader.chainId) throw new ProtocolError(400, "Arbiter identity requested for a different chain")
+    const record = await getArbiterSwarmIdentity(this.repo, wallet, chainId)
+    if (record) return record.payload
+    if (await hasArbiterSwarmIdentityForOtherChain(this.repo, wallet, chainId)) throw new ProtocolError(404, "Arbiter has registered a Swarm identity for a different chain")
+    throw new ProtocolError(404, "Arbiter has not registered a Swarm identity")
+  }
   async bindAgreementIdentity(binding: AgreementEvidenceIdentityV1) {
     if (binding.chainId !== this.reader.chainId || !await this.reader.isEscrow(binding.escrow)) throw new ProtocolError(404, "Canonical deal not found")
     if (!await verifyAgreementEvidenceIdentity(binding)) throw new ProtocolError(400, "Invalid signed Swarm identity")

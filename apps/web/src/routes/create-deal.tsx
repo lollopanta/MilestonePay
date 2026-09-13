@@ -11,7 +11,7 @@ import {
   RiShieldCheckLine,
   RiWallet3Line,
 } from "@remixicon/react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router"
 import { decodeEventLog, isAddress, type Address, type Hex } from "viem"
 import { useAccount } from "wagmi"
@@ -42,7 +42,7 @@ import {
 } from "@/features/create-deal/allocation"
 import { wagmiConfig } from "@/web3/config"
 import { contracts } from "@/web3/contracts"
-import { bindAgreementIdentity, currentSwarmPublicKey, getSwarmIdClient } from "@/lib/evidence"
+import { arbiterSwarmIdentity, bindAgreementIdentity, currentSwarmPublicKey, getSwarmIdClient } from "@/lib/evidence"
 import { evidenceIdentityMessage, verifyEvidenceIdentity } from "@milestonepay/evidence"
 
 const defaultReviewPeriod = 7n * 24n * 60n * 60n
@@ -84,8 +84,8 @@ export function CreateDeal() {
   const { address: client, chainId, isConnected } = useAccount()
   const [provider, setProvider] = useState("")
   const [arbiter, setArbiter] = useState("")
-  const [arbiterSwarmPublicKey, setArbiterSwarmPublicKey] = useState("")
-  const [arbiterSwarmSignature, setArbiterSwarmSignature] = useState("")
+  const [verifiedArbiterIdentity, setVerifiedArbiterIdentity] = useState<{ wallet: Address; swarmPublicKey: string; signature: Hex }>()
+  const [arbiterIdentityStatus, setArbiterIdentityStatus] = useState<"idle" | "checking" | "verified" | "missing" | "invalid" | "error">("idle")
   const [milestones, setMilestones] = useState([""])
   const [step, setStep] = useState(0)
   const [status, setStatus] = useState<TransactionStatus>({ state: "idle" })
@@ -108,6 +108,27 @@ export function CreateDeal() {
     }
     return undefined
   }, [arbiter, client, provider])
+
+  useEffect(() => {
+    let cancelled = false
+    void Promise.resolve().then(async () => {
+      setVerifiedArbiterIdentity(undefined)
+      if (!isAddress(arbiter) || chainId !== avalancheFuji.id) return setArbiterIdentityStatus("idle")
+      setArbiterIdentityStatus("checking")
+      try {
+        const record = await arbiterSwarmIdentity(arbiter as Address, avalancheFuji.id)
+        if (cancelled) return
+        if (record.chainId !== avalancheFuji.id || record.identity.wallet.toLowerCase() !== arbiter.toLowerCase() || !await verifyEvidenceIdentity(record.identity, avalancheFuji.id)) throw new Error("Invalid registered arbiter identity")
+        setVerifiedArbiterIdentity(record.identity)
+        setArbiterIdentityStatus("verified")
+      } catch (error) {
+        if (cancelled) return
+        const message = error instanceof Error ? error.message : ""
+        setArbiterIdentityStatus(/not registered|different chain/i.test(message) ? "missing" : /invalid registered/i.test(message) ? "invalid" : "error")
+      }
+    })
+    return () => { cancelled = true }
+  }, [arbiter, chainId])
 
   const updateMilestone = (index: number, value: string) =>
     setMilestones((items) =>
@@ -132,11 +153,11 @@ export function CreateDeal() {
       })
       return
     }
-    if (participantError || allocationError || !arbiterSwarmPublicKey || !arbiterSwarmSignature) {
+    if (participantError || allocationError || !verifiedArbiterIdentity) {
       setStatus({
         state: "error",
         title: "Review the agreement",
-        description: participantError ?? allocationError ?? "The arbiter's signed Swarm identity is required.",
+        description: participantError ?? allocationError ?? "The arbiter must register a verified Swarm identity first.",
       })
       return
     }
@@ -152,8 +173,8 @@ export function CreateDeal() {
       const clientSignature = await signMessage(wagmiConfig, {
         message: evidenceIdentityMessage(client, clientSwarmPublicKey, avalancheFuji.id),
       })
-      const arbiterIdentity = { wallet: arbiter as Address, swarmPublicKey: arbiterSwarmPublicKey, signature: arbiterSwarmSignature as Hex }
-      if (!await verifyEvidenceIdentity(arbiterIdentity, avalancheFuji.id)) throw new Error("Invalid arbiter Swarm identity proof")
+      const arbiterIdentity = verifiedArbiterIdentity
+      if (!await verifyEvidenceIdentity(arbiterIdentity, avalancheFuji.id)) throw new Error("Registered arbiter Swarm identity is invalid")
       setStatus({
         state: "wallet-confirmation",
         title: "Create agreement",
@@ -256,7 +277,7 @@ export function CreateDeal() {
     }
   }
 
-  const canContinueAgreement = isConnected && !participantError && Boolean(arbiterSwarmPublicKey && arbiterSwarmSignature)
+  const canContinueAgreement = isConnected && !participantError && arbiterIdentityStatus === "verified"
   const canContinueMilestones = !("error" in allocation)
   const statusIsError = status.state === "error"
 
@@ -266,7 +287,7 @@ export function CreateDeal() {
         <Link to="/" className="text-base font-semibold tracking-tight">
           MilestonePay
         </Link>
-        <WalletButton />
+        <div className="flex items-center gap-3"><Link to="/swarm-identity" className="text-sm text-muted-foreground hover:text-foreground">Swarm identity</Link><WalletButton /></div>
       </header>
 
       <div className="mx-auto flex max-w-5xl flex-col gap-8 py-10 lg:py-14">
@@ -367,17 +388,11 @@ export function CreateDeal() {
                         Resolves disputes between the client and provider.
                       </p>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="arbiter-swarm-key" className="text-sm font-medium">
-                        Arbiter Swarm public key
-                      </label>
-                      <Input id="arbiter-swarm-key" autoComplete="off" placeholder="02… or 03…" value={arbiterSwarmPublicKey} onChange={(event) => setArbiterSwarmPublicKey(event.target.value.trim())} />
-                      <label htmlFor="arbiter-swarm-signature" className="text-sm font-medium">
-                        Arbiter identity signature
-                      </label>
-                      <Input id="arbiter-swarm-signature" autoComplete="off" placeholder="0x… signature over the MilestonePay Swarm Identity message" value={arbiterSwarmSignature} onChange={(event) => setArbiterSwarmSignature(event.target.value.trim())} />
-                      <p className="text-sm text-muted-foreground">This proof binds the arbiter wallet to the Swarm key and is locked when the agreement is created.</p>
-                    </div>
+                    {isAddress(arbiter) && (
+                      <p className={arbiterIdentityStatus === "verified" ? "text-sm text-emerald-600" : arbiterIdentityStatus === "invalid" || arbiterIdentityStatus === "error" ? "text-sm text-destructive" : "text-sm text-muted-foreground"}>
+                        {arbiterIdentityStatus === "checking" ? "Checking arbiter identity…" : arbiterIdentityStatus === "verified" ? "Arbiter identity verified" : arbiterIdentityStatus === "missing" ? "Arbiter has not registered a Swarm identity" : arbiterIdentityStatus === "invalid" ? "Arbiter identity proof is invalid" : arbiterIdentityStatus === "error" ? "Arkiv identity registry is unavailable" : ""}
+                      </p>
+                    )}
                     {participantError && provider && arbiter && (
                       <Alert variant="destructive">
                         <AlertTitle>Check the participants</AlertTitle>

@@ -1,6 +1,7 @@
 import {
   createEvidenceClient,
   type AgreementEvidenceIdentityV1,
+  type ArbiterSwarmIdentityV1,
   type DisputeEvidenceSealV1,
   type EvidenceDescriptorV1,
   type SwarmActClient,
@@ -66,6 +67,8 @@ export type AgreementIdentities = { client: BoundIdentity; provider?: BoundIdent
 
 export function agreementIdentities(escrow: Address) { return api<AgreementIdentities>(`/agreements/${escrow}/identities`) }
 export function bindAgreementIdentity(binding: AgreementEvidenceIdentityV1) { return api(`/agreements/${binding.escrow}/identities`, { method: "POST", body: JSON.stringify(binding) }) }
+export function registerArbiterSwarmIdentity(identity: ArbiterSwarmIdentityV1) { return api<ArbiterSwarmIdentityV1>("/arbiter-identities", { method: "POST", body: JSON.stringify(identity) }) }
+export function arbiterSwarmIdentity(wallet: Address, chainId: number) { return api<ArbiterSwarmIdentityV1>(`/arbiter-identities/${wallet}?chainId=${chainId}`) }
 export function evidenceDescriptor(hash: Hex) { return api<{ evidenceHash: Hex; descriptor: EvidenceDescriptorV1 }>(`/evidence/${hash}`) }
 export function registerEvidence(descriptor: EvidenceDescriptorV1) { return api("/evidence", { method: "POST", body: JSON.stringify(descriptor) }) }
 export function registerDisputeEvidence(seal: DisputeEvidenceSealV1) { return api("/dispute-evidence", { method: "POST", body: JSON.stringify(seal) }) }

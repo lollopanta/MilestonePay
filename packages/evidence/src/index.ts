@@ -3,6 +3,8 @@ import { isAddress, keccak256, toBytes, verifyMessage, type Address, type Hex } 
 
 export type EvidenceKind = "milestone" | "dispute-client" | "dispute-provider"
 export type ParticipantEvidenceIdentity = { wallet: Address; swarmPublicKey: string; signature: Hex }
+/** Public, append-only discovery record. Agreement bindings remain separate and immutable. */
+export type ArbiterSwarmIdentityV1 = { version: 1; chainId: number; identity: ParticipantEvidenceIdentity }
 export type EvidenceDescriptorV1 = {
   version: 1
   kind: EvidenceKind
@@ -129,7 +131,17 @@ export function evidenceIdentityMessage(wallet: Address, swarmPublicKey: string,
 }
 
 export async function verifyEvidenceIdentity(identity: ParticipantEvidenceIdentity, chainId: number) {
-  return isAddress(identity.wallet) && publicKey.test(identity.swarmPublicKey) && await verifyMessage({ address: identity.wallet, message: evidenceIdentityMessage(identity.wallet, identity.swarmPublicKey, chainId), signature: identity.signature })
+  try { return isAddress(identity.wallet) && publicKey.test(identity.swarmPublicKey) && await verifyMessage({ address: identity.wallet, message: evidenceIdentityMessage(identity.wallet, identity.swarmPublicKey, chainId), signature: identity.signature }) } catch { return false }
+}
+
+export function validateArbiterSwarmIdentity(value: unknown): asserts value is ArbiterSwarmIdentityV1 {
+  const identity = value as ArbiterSwarmIdentityV1
+  if (!identity || Object.keys(identity).length !== 3 || identity.version !== 1 || !Number.isSafeInteger(identity.chainId) || identity.chainId <= 0 || !identity.identity || Object.keys(identity.identity).length !== 3 || !isAddress(identity.identity.wallet) || !publicKey.test(identity.identity.swarmPublicKey) || !/^0x[0-9a-f]{130}$/i.test(identity.identity.signature)) throw new Error("Invalid arbiter Swarm identity")
+}
+
+export function canonicalizeArbiterSwarmIdentity(value: ArbiterSwarmIdentityV1) {
+  validateArbiterSwarmIdentity(value)
+  return `{"version":1,"chainId":${value.chainId},"identity":{"wallet":${quoted(value.identity.wallet.toLowerCase())},"swarmPublicKey":${quoted(key(value.identity.swarmPublicKey))},"signature":${quoted(value.identity.signature.toLowerCase())}}}`
 }
 
 export function validateAgreementEvidenceIdentity(value: unknown): asserts value is AgreementEvidenceIdentityV1 {
