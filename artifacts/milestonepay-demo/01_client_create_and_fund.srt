@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:03,900
+I want to hire someone, but I don't want to send the money directly and just hope the work gets delivered.
+
+2
+00:00:03,900 --> 00:00:10,500
+I'll define the agreement first. The deliverable and the people involved should be explicit before funds move.
+
+3
+00:00:10,500 --> 00:00:15,000
+I can see exactly which provider wallet will be paid, and an arbiter is already defined in case we disagree.
+
+4
+00:00:15,000 --> 00:00:19,500
+The wallet confirmation is important — the application cannot move my funds without my approval.
+
+5
+00:00:19,500 --> 00:00:30,000
+The money is committed, but it hasn't been released to the provider yet. The provider can verify the funds before doing any work.
