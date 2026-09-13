@@ -1,0 +1,19 @@
+1
+00:00:00,000 --> 00:00:05,200
+Before I start working, I want proof the client actually committed the money.
+
+2
+00:00:05,200 --> 00:00:09,000
+The agreement is addressed to my wallet, the amount is fixed, and payment is tied to the milestone.
+
+3
+00:00:09,000 --> 00:00:14,800
+I've finished the work, so I submit the milestone instead of asking the client to manually send me money.
+
+4
+00:00:14,800 --> 00:00:22,500
+Submitting does not automatically pay me. The client still has to review the milestone.
+
+5
+00:00:22,500 --> 00:00:30,000
+After the client approves, the escrow releases the payment to my wallet. Payment follows the agreement state instead of relying on a promise.

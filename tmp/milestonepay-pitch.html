@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MilestonePay · ETHRome 2026 Pitch</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  /* ============================================================
+     CLAUDE SLIDES DESIGN TOKENS — MilestonePay branding
+     ============================================================ */
+  :root {
+    --cs-primary:   #7C3AED;
+    --cs-secondary: #2563EB;
+    --cs-cream:     #F7F6F2;
+    --cs-cream-2:   #EDECE6;
+    --cs-black:     #000000;
+    --cs-body:      #454545;
+    --cs-muted:     #9BA1A5;
+    --cs-white:     #FFFFFF;
+    --cs-border:    rgba(0,0,0,0.08);
+    --cs-border-strong: rgba(0,0,0,0.16);
+    --cs-grad-radial: radial-gradient(112% 150% at 0% 100%, #3A19AB 0%, #7C3AED 60%, #2563EB 100%);
+    --cs-grad-linear: linear-gradient(135deg, #3A19AB 0%, #7C3AED 60%, #2563EB 100%);
+    --cs-grad-text:   linear-gradient(135deg, #7C3AED 0%, #5C2EE8 50%, #2563EB 100%);
+    --cs-font-sans:   'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --cs-font-mono:   ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --cs-shadow-1:    0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03);
+    --cs-shadow-2:    0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+    --cs-shadow-3:    0 12px 32px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.05);
+    --cs-fg-1:      var(--cs-black);
+    --cs-fg-2:      var(--cs-body);
+    --cs-fg-3:      var(--cs-muted);
+    --cs-ease-std:  cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { background: #0C0C1A; margin: 0; padding: 0; }
+  body {
+    font-family: var(--cs-font-sans);
+    color: var(--cs-fg-2);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  deck-stage > section {
+    background: var(--cs-cream);
+    color: var(--cs-fg-2);
+    overflow: hidden;
+    position: relative;
+    transition: opacity 120ms ease;
+  }
+
+  .grad   { background: var(--cs-grad-radial) !important; color: #fff !important; }
+  .cream  { background: var(--cs-cream); color: var(--cs-body); }
+  .dark   { background: #0F0E1A !important; color: #fff !important; }
+
+  .pad {
+    padding: 80px 120px 110px;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex; flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+  }
+  .pad.center { justify-content: center; align-items: center; text-align: center; }
+
+  /* ============================================================ TYPOGRAPHY */
+  .eyebrow {
+    font-size: 22px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--cs-primary);
+    margin: 0 0 32px;
+  }
+  .grad .eyebrow, .dark .eyebrow { color: rgba(255,255,255,.75); }
+
+  h1.cover {
+    font-size: 148px; line-height: 0.95;
+    letter-spacing: -0.035em;
+    margin: 0; font-weight: 800; color: #fff;
+  }
+  h1.cover-md {
+    font-size: 110px; line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin: 0; font-weight: 800; color: #fff;
+  }
+  h2.title {
+    font-size: 70px; line-height: 1.05;
+    letter-spacing: -0.022em;
+    margin: 0 0 48px;
+    font-weight: 800; color: var(--cs-black);
+  }
+  h2.title.tight { margin-bottom: 32px; }
+  h2.title.white { color: #fff; }
+
+  .subtitle {
+    font-size: 34px; line-height: 1.4;
+    font-weight: 300;
+    color: rgba(255,255,255,.86);
+    max-width: 1300px;
+    margin-top: 44px;
+  }
+
+  .payoff {
+    font-size: 28px; line-height: 1.4;
+    color: var(--cs-black); font-weight: 600;
+    margin-top: 48px; max-width: 1400px;
+  }
+
+  .grad-word {
+    background: var(--cs-grad-text);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: transparent;
+    font-style: normal;
+  }
+
+  .mono { font-family: var(--cs-font-mono); }
+
+  .ts-title {
+    font-size: 140px; line-height: 0.98;
+    letter-spacing: -0.035em;
+    margin: 0; font-weight: 800; color: var(--cs-black);
+    text-align: center;
+  }
+  .ts-tagline {
+    margin-top: 32px;
+    font-size: 34px; line-height: 1.4;
+    font-weight: 300;
+    color: var(--cs-body);
+    text-align: center;
+    max-width: 1200px;
+  }
+
+  /* ============================================================ FOOTER */
+  .footer {
+    position: absolute;
+    left: 120px; right: 120px; bottom: 44px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 22px; letter-spacing: 0.06em;
+    color: var(--cs-muted); font-weight: 500;
+  }
+  .footer .left { display: flex; align-items: center; gap: 18px; }
+  .footer .num {
+    font-variant-numeric: tabular-nums; font-weight: 600;
+    color: var(--cs-fg-1); opacity: .45;
+  }
+  .grad .footer, .dark .footer { color: rgba(255,255,255,.5); }
+  .grad .footer .num, .dark .footer .num { color: #fff; opacity: .7; }
+
+  /* ============================================================ ANIMATION SYSTEM */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 520ms var(--cs-ease-std),
+      transform 520ms var(--cs-ease-std);
+    transition-delay: var(--d, 0ms);
+  }
+  .reveal.is-on { opacity: 1; transform: none; }
+  .sweep { display: none; }
+  .act-marker {
+    position: absolute;
+    top: 80px; right: 120px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--cs-font-mono);
+    font-size: 22px;
+    color: var(--cs-muted);
+    letter-spacing: 0.08em;
+    z-index: 2;
+  }
+  .grad .act-marker, .dark .act-marker { color: rgba(255,255,255,0.4); }
+  .act-marker .step-num { color: var(--cs-fg-1); font-weight: 700; }
+  .grad .act-marker .step-num, .dark .act-marker .step-num { color: #fff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  /* ============================================================ VIEWER CHROME */
+  #fs-btn {
+    position: fixed; top: 18px; right: 18px;
+    z-index: 2147483647;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(0,0,0,0.5);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    display: grid; place-items: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: opacity 200ms ease, background 200ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #fs-btn:hover { background: rgba(0,0,0,0.7); color: #fff; }
+  #fs-btn:focus { outline: none; }
+  #fs-btn svg { width: 18px; height: 18px; display: block; }
+  #fs-btn[data-fs="1"] { opacity: 0; pointer-events: none; }
+
+  #progress-bar {
+    position: fixed; top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #7C3AED, #2563EB);
+    width: 0%;
+    transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 2147483646;
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     SLIDE-SPECIFIC CSS
+     ============================================================ */
+
+  /* PQ Cards */
+  .pq-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 4px;
+    flex: 1;
+  }
+  .pq-card {
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 26px;
+    padding: 52px 50px;
+    box-shadow: var(--cs-shadow-2);
+    display: flex; flex-direction: column;
+    justify-content: center;
+  }
+  .pq-card .pq-eyebrow {
+    font-size: 17px; letter-spacing: 0.18em;
+    text-transform: uppercase; font-weight: 700;
+    color: var(--cs-primary); margin-bottom: 18px;
+  }
+  .pq-card h3 {
+    font-size: 56px; font-weight: 800;
+    color: var(--cs-black); margin: 0 0 20px;
+    line-height: 1.0;
+    letter-spacing: -0.025em;
+  }
+  .pq-card .pq-consequence {
+    font-family: var(--cs-font-mono);
+    font-size: 20px; font-weight: 700;
+    color: var(--cs-primary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 28px;
+  }
+  .pq-card p {
+    font-size: 22px; line-height: 1.5;
+    color: var(--cs-body); margin: 0;
+  }
+
+  /* 3-col numbered cards */
+  .num-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 26px;
+    margin-top: 8px;
+    flex: 1;
+  }
+  .num-card {
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 22px;
+    padding: 38px 40px;
+    box-shadow: var(--cs-shadow-2);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .num-card-num {
+    font-family: var(--cs-font-mono);
+    font-size: 26px; font-weight: 800;
+    color: var(--cs-primary);
+    line-height: 1;
+  }
+  .num-card h3 {
+    font-size: 30px; font-weight: 700;
+    color: var(--cs-black); margin: 0;
+    line-height: 1.15;
+  }
+  .num-card p {
+    font-size: 19px; line-height: 1.5;
+    color: var(--cs-body); margin: 0; flex: 1;
+  }
+  .num-card .tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 999px;
+    margin-top: 4px; align-self: flex-start;
+  }
+  .tag-purple { background: rgba(124,58,237,0.10); color: #7C3AED; }
+  .tag-blue   { background: rgba(37,99,235,0.10); color: #1d4ed8; }
+  .tag-green  { background: rgba(22,163,74,0.12); color: #15803d; }
+  .tag-orange { background: rgba(234,88,12,0.10); color: #c2410c; }
+
+  /* Badge */
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 6px 13px; border-radius: 999px;
+  }
+  .badge-primary { background: rgba(124,58,237,0.10); color: var(--cs-primary); }
+  .badge-green   { background: rgba(22,163,74,0.12); color: #15803d; }
+  .badge-blue    { background: rgba(37,99,235,0.10); color: #1d4ed8; }
+  .badge-orange  { background: rgba(234,88,12,0.10); color: #c2410c; }
+  .badge-muted   { background: rgba(0,0,0,0.05); color: var(--cs-muted); }
+
+  /* Plain cards */
+  .card {
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 26px;
+    padding: 40px 44px;
+    box-shadow: var(--cs-shadow-2);
+  }
+  .card .card-eyebrow {
+    font-size: 20px; letter-spacing: 0.20em;
+    text-transform: uppercase; font-weight: 700;
+    color: var(--cs-muted); margin-bottom: 16px;
+  }
+  .card h3 {
+    font-size: 30px; line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--cs-black); font-weight: 700;
+    margin: 0 0 12px;
+  }
+  .card p {
+    font-size: 22px; line-height: 1.5;
+    color: var(--cs-body); margin: 0;
+  }
+
+  /* iPhone perspective mockup */
+  .iphone-scene {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 80px;
+    flex: 1;
+    perspective: 1400px;
+  }
+  .iphone-wrap {
+    position: relative;
+  }
+  .iphone-img {
+    width: 280px;
+    border-radius: 40px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.45);
+  }
+  .iphone-wrap.tilt-left .iphone-img {
+    transform: rotateY(28deg) rotateX(6deg) scale(1.02);
+    transform-origin: center center;
+  }
+  .iphone-wrap.tilt-right .iphone-img {
+    transform: rotateY(-28deg) rotateX(6deg) scale(1.02);
+    transform-origin: center center;
+  }
+  .iphone-label {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 18px; font-weight: 600;
+    color: var(--cs-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Split layout: left text / right visual */
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    flex: 1;
+    align-items: center;
+  }
+  .split-left { display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+  .split-right { display: flex; align-items: center; justify-content: center; }
+
+  /* Sponsor slide */
+  .sponsor-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    margin-top: 8px;
+    flex: 1;
+    align-items: center;
+  }
+  .sponsor-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 24px;
+    padding: 44px 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    text-align: center;
+  }
+  .sponsor-card svg { filter: brightness(1); }
+  .sponsor-card .sponsor-name {
+    font-size: 22px; font-weight: 700;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 0.04em;
+  }
+  .sponsor-card .sponsor-role {
+    font-size: 16px; font-weight: 500;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+  }
+
+  /* Arkiv-specific detail slide */
+  .arkiv-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex: 1;
+    margin-top: 8px;
+  }
+  .arkiv-step {
+    flex: 1;
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 24px;
+    padding: 44px 36px;
+    display: flex; flex-direction: column;
+    gap: 16px;
+    box-shadow: var(--cs-shadow-2);
+    position: relative;
+  }
+  .arkiv-arrow {
+    display: flex; align-items: center; justify-content: center;
+    width: 60px; flex-shrink: 0;
+    color: var(--cs-primary);
+    font-size: 36px;
+  }
+  .arkiv-step .step-n {
+    font-family: var(--cs-font-mono);
+    font-size: 22px; font-weight: 800;
+    color: var(--cs-primary);
+  }
+  .arkiv-step h3 {
+    font-size: 28px; font-weight: 700;
+    color: var(--cs-black); margin: 0;
+    line-height: 1.2;
+  }
+  .arkiv-step p {
+    font-size: 18px; line-height: 1.5;
+    color: var(--cs-body); margin: 0;
+  }
+  .arkiv-step code {
+    font-family: var(--cs-font-mono);
+    font-size: 14px;
+    background: rgba(124,58,237,0.08);
+    color: var(--cs-primary);
+    padding: 3px 8px; border-radius: 6px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* Architecture diagram */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    flex: 1;
+    margin-top: 8px;
+    align-items: center;
+  }
+  .arch-card {
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 24px;
+    padding: 40px 38px;
+    box-shadow: var(--cs-shadow-2);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .arch-icon {
+    width: 60px; height: 60px;
+    border-radius: 16px;
+    display: grid; place-items: center;
+    margin-bottom: 8px;
+  }
+  .arch-icon.purple { background: rgba(124,58,237,0.12); color: #7C3AED; }
+  .arch-icon.blue   { background: rgba(37,99,235,0.12); color: #2563EB; }
+  .arch-icon.orange { background: rgba(234,88,12,0.12); color: #ea580c; }
+  .arch-icon.teal   { background: rgba(20,184,166,0.12); color: #0d9488; }
+  .arch-icon.green  { background: rgba(22,163,74,0.12); color: #16a34a; }
+  .arch-icon svg    { width: 30px; height: 30px; }
+  .arch-card h3 {
+    font-size: 26px; font-weight: 700;
+    color: var(--cs-black); margin: 0;
+    line-height: 1.15;
+  }
+  .arch-card p {
+    font-size: 18px; line-height: 1.5;
+    color: var(--cs-body); margin: 0;
+  }
+
+  /* Stat pills */
+  .stat-row {
+    display: flex; gap: 24px; margin-top: 8px;
+  }
+  .stat-pill {
+    flex: 1;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 32px 36px;
+    text-align: center;
+  }
+  .stat-pill .stat-val {
+    font-size: 56px; font-weight: 800;
+    color: #fff; line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  .stat-pill .stat-label {
+    font-size: 18px; font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  /* Swarm-specific */
+  .swarm-flow {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr 40px 1fr;
+    gap: 0;
+    flex: 1;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .swarm-box {
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 22px;
+    padding: 36px 32px;
+    box-shadow: var(--cs-shadow-2);
+    display: flex; flex-direction: column; gap: 12px;
+    height: 100%;
+  }
+  .swarm-arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cs-primary);
+  }
+  .swarm-box .sw-label {
+    font-family: var(--cs-font-mono);
+    font-size: 16px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--cs-primary);
+  }
+  .swarm-box h3 {
+    font-size: 26px; font-weight: 700;
+    color: var(--cs-black); margin: 0;
+    line-height: 1.2;
+  }
+  .swarm-box p {
+    font-size: 17px; line-height: 1.5;
+    color: var(--cs-body); margin: 0;
+  }
+  .swarm-box code {
+    font-family: var(--cs-font-mono);
+    font-size: 13px;
+    background: rgba(124,58,237,0.08);
+    color: var(--cs-primary);
+    padding: 2px 7px; border-radius: 5px;
+    display: inline-block; margin-top: 4px;
+    word-break: break-all;
+  }
+
+  /* Bounty cards */
+  .bounty-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    flex: 1;
+    margin-top: 8px;
+  }
+  .bounty-card {
+    border-radius: 24px;
+    padding: 44px 44px;
+    display: flex; flex-direction: column; gap: 16px;
+    position: relative; overflow: hidden;
+  }
+  .bounty-card.arkiv-bg  { background: linear-gradient(135deg, #1a0e2e 0%, #2d1a4a 100%); border: 1px solid rgba(124,58,237,0.25); }
+  .bounty-card.avax-bg   { background: linear-gradient(135deg, #1a0a0a 0%, #2d1010 100%); border: 1px solid rgba(230,33,47,0.25); }
+  .bounty-card .bounty-logo { margin-bottom: 4px; }
+  .bounty-card h3 {
+    font-size: 28px; font-weight: 700; color: #fff; margin: 0;
+    line-height: 1.2;
+  }
+  .bounty-card p {
+    font-size: 19px; line-height: 1.5;
+    color: rgba(255,255,255,0.65); margin: 0;
+  }
+  .bounty-amount {
+    font-size: 40px; font-weight: 800;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    margin-top: 8px;
+  }
+  .bounty-amount span {
+    font-size: 22px; font-weight: 500;
+    opacity: 0.55; margin-left: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ENS card */
+  .ens-row {
+    display: flex; align-items: center; gap: 20px;
+    background: #fff;
+    border: 1px solid var(--cs-border);
+    border-radius: 20px;
+    padding: 28px 36px;
+    box-shadow: var(--cs-shadow-2);
+  }
+  .ens-code {
+    flex: 1;
+    font-family: var(--cs-font-mono);
+    font-size: 22px;
+    color: var(--cs-black);
+    font-weight: 600;
+  }
+  .ens-code .addr-raw  { color: var(--cs-muted); }
+  .ens-code .addr-ens  { color: #7C3AED; font-weight: 700; }
+
+  /* Inline logos */
+  .logo-inline {
+    display: inline-block;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+  <!-- ──────────── 01 COVER ──────────── -->
+  <section class="grad" data-label="01 Cover" data-steps="1" data-current-step="1">
+    <div class="pad center" style="gap:0">
+      <!-- MilestonePay logo SVG inline white -->
+      <div style="margin-bottom:48px; opacity:.9">
+        <svg viewBox="0 0 1234.35 333.5" style="height:60px; width:auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon style="fill:#8C63FF" points="207,127 276.282,167 207,207 137.718,167"/>
+          <polygon style="fill:#5C2EE8" points="137.718,167 207,207 207,287 137.718,247"/>
+          <polygon style="fill:#3A19AB" points="207,207 276.282,167 276.282,247 207,287"/>
+          <polyline style="fill:none;stroke:#8C8FAA;stroke-width:13;stroke-linecap:round;stroke-linejoin:round" points="139,107 107,107 107,139"/>
+          <polyline style="fill:none;stroke:#8C8FAA;stroke-width:13;stroke-linecap:round;stroke-linejoin:round" points="275,107 307,107 307,139"/>
+          <polyline style="fill:none;stroke:#8C8FAA;stroke-width:13;stroke-linecap:round;stroke-linejoin:round" points="107,275 107,307 139,307"/>
+          <polyline style="fill:none;stroke:#8C8FAA;stroke-width:13;stroke-linecap:round;stroke-linejoin:round" points="307,275 307,307 275,307"/>
+          <circle style="fill:#00E5A3" cx="207" cy="31" r="11"/>
+          <line style="fill:none;stroke:#00E5A3;stroke-width:7;stroke-linecap:round" x1="207" y1="112" x2="207" y2="42"/>
+          <circle style="fill:#FF5B4E" cx="31" cy="207" r="11"/>
+          <line style="fill:none;stroke:#FF5B4E;stroke-width:7;stroke-linecap:round" x1="112" y1="207" x2="42" y2="207"/>
+          <circle style="fill:#0075FF" cx="383" cy="207" r="11"/>
+          <line style="fill:none;stroke:#0075FF;stroke-width:7;stroke-linecap:round" x1="302" y1="207" x2="372" y2="207"/>
+          <!-- Text: MilestonePay -->
+          <g style="fill:#FFFFFF">
+            <path d="M523.21,245.881l0.46-57.615h-0.345l-21.16,57.615h-13.8l-20.585-57.615h-0.345l0.46,57.615H449.38 v-81.42h27.979l18.539,52.21h0.46l17.731-52.21h28.441v81.42H523.21z"/>
+            <path d="M580.364,170.326c0,1.457-0.288,2.817-0.863,4.082c-0.575,1.266-1.342,2.357-2.3,3.277 c-0.959,0.92-2.109,1.649-3.45,2.186c-1.342,0.537-2.742,0.805-4.197,0.805c-3.067,0-5.635-1.016-7.705-3.048 c-2.07-2.03-3.105-4.465-3.105-7.302c0-1.38,0.268-2.703,0.805-3.968c0.535-1.265,1.303-2.357,2.3-3.277 c0.996-0.92,2.146-1.668,3.45-2.243c1.303-0.574,2.72-0.862,4.255-0.862c1.456,0,2.855,0.27,4.197,0.806 c1.341,0.537,2.491,1.265,3.45,2.185c0.958,0.92,1.725,2.013,2.3,3.277C580.076,167.509,580.364,168.87,580.364,170.326z M560.123,245.881v-57.27h18.86v57.27H560.123z"/>
+            <path d="M595.888,245.881v-86.94h19.205v86.94H595.888z"/>
+          </g>
+          <g style="fill:#8A5CFF">
+            <path d="M1082.446,189.531c0,4.754-0.883,8.76-2.646,12.018c-1.765,3.259-4.14,5.885-7.13,7.877 c-2.99,1.994-6.439,3.45-10.35,4.37s-7.975,1.38-12.19,1.38h-9.774v30.705h-19.666v-81.42h29.9c4.445,0,8.605,0.442,12.478,1.322 c3.87,0.883,7.245,2.3,10.12,4.255s5.135,4.524,6.785,7.705C1081.621,180.926,1082.446,184.856,1082.446,189.531z"/>
+          </g>
+        </svg>
+      </div>
+      <div class="eyebrow">Pitch · ETHRome 2026 · 11–13 September · Rome</div>
+      <h1 class="cover-md">Milestone<wbr>Pay</h1>
+      <div class="subtitle">Trustless milestone escrow with private evidence,<br>verifiable reputation, and settlement on Avalanche Fuji</div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">01</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 02 THE PROBLEM ──────────── -->
+  <section data-label="02 Problem" data-steps="3" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/3</span></div>
+      <div class="eyebrow reveal" data-step="1">The problem</div>
+      <h2 class="title reveal" data-step="1" style="--d:80ms">Freelance work is trustless<br>in the wrong direction</h2>
+      <div class="pq-grid">
+        <div class="pq-card reveal" data-step="2">
+          <div class="pq-eyebrow">Client side</div>
+          <h3>Pay first, prove never</h3>
+          <div class="pq-consequence">→ No verifiable delivery evidence</div>
+          <p>Clients release funds on good faith. Disputes become a he-said-she-said with no on-chain record of what was actually delivered.</p>
+        </div>
+        <div class="pq-card reveal" data-step="3">
+          <div class="pq-eyebrow">Provider side</div>
+          <h3>Work first, paid maybe</h3>
+          <div class="pq-consequence">→ No trustless payment guarantee</div>
+          <p>Providers deliver with no certainty of payment. Escrow exists but evidence of completion is off-chain, editable, and not linked to the contract.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">02</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 03 THE SOLUTION ──────────── -->
+  <section data-label="03 Solution" data-steps="1" data-current-step="1">
+    <div class="pad center" style="gap:0">
+      <div class="eyebrow">The answer</div>
+      <h1 class="ts-title">Stake funds. Submit<br><span class="grad-word">evidence.</span> Get paid.</h1>
+      <div class="ts-tagline">A three-party milestone escrow where private delivery proof is committed on-chain,<br>indexed immutably, and triggers deterministic reputation scoring.</div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">03</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 04 APP DEMO / IPHONE ──────────── -->
+  <section data-label="04 App Demo" data-steps="1" data-current-step="1">
+    <div class="pad" style="padding-top:72px;">
+      <div class="eyebrow">Live demo</div>
+      <h2 class="title tight">The app on Avalanche Fuji</h2>
+      <div class="iphone-scene" style="perspective:1400px; padding-bottom:20px">
+        <div class="iphone-wrap tilt-left reveal is-on" style="--d:0ms">
+          <img src="../apps/web/public/Iphone_1.png" class="iphone-img" alt="Protocol explorer">
+          <div class="iphone-label">Protocol explorer</div>
+        </div>
+        <div class="iphone-wrap tilt-right reveal is-on" style="--d:120ms">
+          <img src="../apps/web/public/Iphone_2.png" class="iphone-img" alt="Escrow agreement">
+          <div class="iphone-label">Escrow agreement</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">04</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 05 ARCHITECTURE ──────────── -->
+  <section data-label="05 Architecture" data-steps="4" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/4</span></div>
+      <div class="eyebrow reveal" data-step="1">How it works</div>
+      <h2 class="title tight reveal" data-step="1" style="--d:80ms">Four layers, one protocol</h2>
+      <div class="arch-grid">
+        <div class="arch-card reveal" data-step="2">
+          <div class="arch-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <h3>Avalanche Fuji</h3>
+          <p>ERC-20 milestone escrow. Client funds upfront, sequential releases per milestone. On-chain evidence hash commitment validates delivery.</p>
+          <span class="tag tag-blue">EscrowFactory · MockUSDT</span>
+        </div>
+        <div class="arch-card reveal" data-step="2" style="--d:80ms">
+          <div class="arch-icon orange">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <h3 style="flex:1">Swarm ACT</h3>
+          </div>
+          <p>Browser-side private evidence transport. Files encrypted via ACT, shared only with deal participants. Private keys never touch the server.</p>
+          <span class="tag tag-orange">packages/evidence</span>
+        </div>
+        <div class="arch-card reveal" data-step="3">
+          <div class="arch-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <h3>Arkiv</h3>
+          <p>Trusted public protocol index. Stores Avalanche events, deal state, evidence descriptors, agreement identities, and reputation inputs. Immutable, 180-day TTL.</p>
+          <span class="tag tag-purple">apps/api/src/arkiv</span>
+        </div>
+        <div class="arch-card reveal" data-step="3" style="--d:80ms">
+          <div class="arch-icon teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <h3>ENS Resolution</h3>
+          <p>All wallet addresses displayed as ENS names via wagmi's <code style="font-family:monospace;font-size:14px;color:#7C3AED">useEnsName</code> hook. Falls back to truncated hex gracefully.</p>
+          <span class="tag tag-teal" style="background:rgba(20,184,166,0.10);color:#0d9488">components/ui/financial.tsx</span>
+        </div>
+        <div class="arch-card reveal" data-step="4">
+          <div class="arch-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <h3>Reputation Engine</h3>
+          <p>Pure deterministic scoring. Reads settlement history from Arkiv, no RPC, no AI, no environment dependency. Token-aware, explainable.</p>
+          <span class="tag tag-green">packages/reputation</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">05</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 06 SPONSOR: ARKIV ──────────── -->
+  <section data-label="06 Arkiv" data-steps="3" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/3</span></div>
+      <div style="display:flex;align-items:center;gap:28px;margin-bottom:28px" class="reveal" data-step="1">
+        <svg width="120" height="28" viewBox="0 0 1389 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 320V0H72.8152V48.4233H48.3167V271.577H72.8152V320H0Z" fill="#7C3AED"/>
+          <path d="M341.97 265.82L325.297 214.688H249.76L232.747 265.82H181.028V246.857L259.968 28.7831H317.471L396.752 246.857V265.82H341.97ZM287.869 101.249L266.092 165.926H308.965L287.869 101.249Z" fill="#7C3AED"/>
+          <path d="M434.201 265.82V28.7831H538.66C589.699 28.7831 615.559 56.8889 615.559 103.958C615.559 134.772 601.948 159.153 579.151 172.698L623.045 246.857V265.82H566.221L517.224 179.132H492.726V265.82H434.201ZM492.726 131.048H528.793C546.146 131.048 556.354 125.63 556.354 104.974C556.354 84.9947 546.146 79.5767 528.793 79.5767H492.726V131.048Z" fill="#7C3AED"/>
+          <path d="M671.199 265.82V28.7831H729.723V121.905H750.819L803.559 28.7831H855.279V48.0847L798.796 143.915L860.382 246.857V265.82H804.92L751.84 172.698H729.723V265.82H671.199Z" fill="#7C3AED"/>
+          <path d="M899.89 265.82V28.7831H958.414V265.82H899.89Z" fill="#7C3AED"/>
+          <path d="M1075.05 265.82L996.106 48.0847V28.7831H1052.25L1104.99 187.598L1156.03 28.7831H1211.49V48.0847L1132.89 265.82H1075.05Z" fill="#7C3AED"/>
+          <path d="M1389 0V320H1316.18V271.577H1340.68V48.4233H1316.18V0H1389Z" fill="#7C3AED"/>
+        </svg>
+        <div class="eyebrow" style="margin:0">Sponsor integration</div>
+      </div>
+      <h2 class="title tight reveal" data-step="1" style="--d:80ms">Arkiv is the backbone<br>of MilestonePay's protocol memory</h2>
+      <div class="arkiv-flow reveal" data-step="2">
+        <div class="arkiv-step">
+          <div class="step-n">01</div>
+          <h3>Avalanche events → Arkiv</h3>
+          <p>The API indexer reads Fuji escrow events from block 58,333,416 and writes idempotent canonical entities: <code>protocol_event</code>, <code>deal</code>, <code>settlement</code>, <code>dispute</code>.</p>
+        </div>
+        <div class="arkiv-arrow">→</div>
+        <div class="arkiv-step">
+          <div class="step-n">02</div>
+          <h3>Evidence descriptors</h3>
+          <p>After the provider submits delivery to Swarm ACT, the public descriptor is verified against the on-chain commitment and stored as an <code>evidence</code> entity in Arkiv.</p>
+        </div>
+        <div class="arkiv-arrow">→</div>
+        <div class="arkiv-step">
+          <div class="step-n">03</div>
+          <h3>Agreement identities</h3>
+          <p>Participants bind their Swarm public key to their on-chain role. These <code>agreement_identity</code> entities gate dispute evidence access — arbiter must be committed before dispute evidence is sealed.</p>
+        </div>
+        <div class="arkiv-arrow">→</div>
+        <div class="arkiv-step">
+          <div class="step-n">04</div>
+          <h3>Reputation inputs</h3>
+          <p>The reputation engine reads <code>settlement</code> and <code>deal</code> entities from Arkiv to compute deterministic, explainable scores per wallet. No off-chain DB needed.</p>
+        </div>
+      </div>
+      <div class="reveal" data-step="3" style="margin-top:20px">
+        <div style="background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.15);border-radius:16px;padding:20px 28px;display:flex;gap:24px;align-items:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style="font-size:18px;color:#454545;line-height:1.4"><strong style="color:#000">Why Arkiv over a Web2 DB?</strong> Protocol history must survive the operator. Arkiv provides a permissioned, trusted-writer model where the indexer address is the only source of truth — not a mutable Postgres table the team could edit.</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">06</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 07 SPONSOR: SWARM ──────────── -->
+  <section data-label="07 Swarm" data-steps="3" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/3</span></div>
+      <div style="display:flex;align-items:center;gap:28px;margin-bottom:28px" class="reveal" data-step="1">
+        <!-- Swarm logo icon only (hexagon shapes) -->
+        <svg viewBox="0 0 948 1115" style="height:36px;width:auto" fill="#fe7900">
+          <path d="M0 665.01V965l260 150 260-150.01V664.96L260 515 0 665.01zM855 515 595 665v299.99L855 1115l260-150.01V664.95L855 515zM817.32 300.27l-129.91-75.25-.13-149.98L557.5 0 297.68 150.01V450L557.5 600l259.82-150V300.27z"/>
+          <path d="m817.32 300.27 129.91-75.3V75L817.52 0 687.28 75.04l130.24 74.83-.2 150.4z"/>
+        </svg>
+        <div class="eyebrow" style="margin:0;color:#ea580c">Sponsor integration</div>
+      </div>
+      <h2 class="title tight reveal" data-step="1" style="--d:80ms">Swarm ACT: private evidence<br>with cryptographic access control</h2>
+      <div class="swarm-flow reveal" data-step="2">
+        <div class="swarm-box">
+          <div class="sw-label">Browser</div>
+          <h3>Provider uploads evidence</h3>
+          <p>Delivery note + files encoded as <code>MilestoneEvidenceBundleV1</code>, encrypted via Swarm ACT with participant public keys as grantees.</p>
+          <code>actUploadData(data, grantees)</code>
+        </div>
+        <div class="swarm-arrow">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="swarm-box">
+          <div class="sw-label">Swarm Network</div>
+          <h3>ACT encrypted reference stored</h3>
+          <p>Returns <code>encryptedReference</code>, <code>historyReference</code>, <code>publisherPublicKey</code>, and <code>actReference</code> — all stored in the evidence descriptor.</p>
+          <code>EvidenceDescriptorV1.act</code>
+        </div>
+        <div class="swarm-arrow">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="swarm-box">
+          <div class="sw-label">On-chain + Arkiv</div>
+          <h3>Commitment committed, descriptor indexed</h3>
+          <p>keccak256 of the canonical descriptor is verified against the on-chain evidence hash. The descriptor is then stored in Arkiv as an <code>evidence</code> entity.</p>
+          <code>hashEvidenceDescriptor()</code>
+        </div>
+      </div>
+      <div class="reveal" data-step="3" style="margin-top:20px">
+        <div style="display:flex;gap:20px">
+          <div style="flex:1;background:rgba(234,88,12,0.06);border:1px solid rgba(234,88,12,0.15);border-radius:16px;padding:20px 24px">
+            <div style="font-size:15px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ea580c;margin-bottom:8px">Decommission (M01)</div>
+            <div style="font-size:18px;color:#454545;line-height:1.4">ACT history references are immutable snapshots. Dispute evidence seals a specific ACT version — even if grantees are later revoked, the arbitration record persists.</div>
+          </div>
+          <div style="flex:1;background:rgba(234,88,12,0.06);border:1px solid rgba(234,88,12,0.15);border-radius:16px;padding:20px 24px">
+            <div style="font-size:15px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ea580c;margin-bottom:8px">Built to expire (M02)</div>
+            <div style="font-size:18px;color:#454545;line-height:1.4">Swarm private keys live only in the browser. No server ever sees ACT secrets. Evidence access expires naturally when grantees are revoked post-dispute.</div>
+          </div>
+          <div style="flex:1;background:rgba(234,88,12,0.06);border:1px solid rgba(234,88,12,0.15);border-radius:16px;padding:20px 24px">
+            <div style="font-size:15px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#ea580c;margin-bottom:8px">Live wire (M03)</div>
+            <div style="font-size:18px;color:#454545;line-height:1.4">The evidence descriptor is live: grantees can be added dynamically via <code style="font-family:monospace;font-size:13px;color:#c2410c">actAddGrantees()</code> when the arbiter identity is committed, enabling real-time arbitration access.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">07</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 08 SPONSOR: AVALANCHE / TEAM1 ──────────── -->
+  <section data-label="08 Avalanche" data-steps="3" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/3</span></div>
+      <div style="display:flex;align-items:center;gap:28px;margin-bottom:28px" class="reveal" data-step="1">
+        <svg viewBox="0 0 1027 289" style="height:32px;width:auto" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M608.94 283.33V85.36C608.94 81.86 611.76 79.01 615.26 78.97L658.51 78.52C662.06 78.48 664.97 81.36 664.97 84.91V98.86C674.74 91.39 685.37 85.5 696.86 81.19C708.64 76.88 721.28 74.73 734.79 74.73C749.16 74.73 760.22 76.88 767.98 81.19C776.02 85.5 782.2 91.68 786.51 99.72C795.99 92.25 806.77 86.22 818.84 81.62C831.2 77.02 845.7 74.72 862.37 74.72C885.93 74.72 903.32 80.9 914.52 93.25C925.73 105.32 931.33 123.85 931.33 148.85V283.32H874.01V155.31C874.01 141.81 871.14 132.18 865.39 126.43C859.64 120.4 850.45 117.38 837.81 117.38C820.57 117.38 808.36 123.56 796.86 135.91C796.86 142.71 796.73 146.97 796.86 153.58V283.31H742.56V155.3C742.56 142.66 740.4 133.18 736.09 126.85C731.78 120.53 723.45 117.37 711.09 117.37C702.47 117.37 694.28 119.67 686.52 124.27C679.05 128.58 672.3 133.61 666.26 139.36V283.31H608.94V283.33Z" fill="#000"/>
+          <path d="M447.44 287.64C434.51 287.64 422.44 285.34 411.24 280.74C400.32 275.86 391.41 268.82 384.52 259.62C377.91 250.14 374.61 238.36 374.61 224.28C374.61 204.17 381.65 188.08 395.73 176.01C410.1 163.94 431.21 157.91 459.09 157.91H519.43V152.31C519.43 139.67 515.84 130.76 508.66 125.59C501.76 120.42 487.69 117.83 466.42 117.83C445.15 117.83 426.59 120.55 407.65 125.98C403.46 127.18 399.18 124.1 399.18 119.74V92.01C399.18 89.38 400.78 87.01 403.26 86.14C411.9 83.1 422.04 80.59 433.66 78.61C447.45 76.02 462.39 74.73 478.48 74.73C509.23 74.73 532.93 81.05 549.6 93.69C566.55 106.05 575.03 126.02 575.03 153.6V283.33L521.59 282.52V264.79C513.54 271.97 503.63 277.58 491.85 281.6C480.07 285.62 465.27 287.64 447.46 287.64H447.44ZM463.38 249.28C476.31 249.28 487.52 247.12 497 242.81C506.48 238.5 513.95 233.04 519.41 226.43V194.1H460.36C437.66 194.1 426.31 203.44 426.31 222.12C426.31 240.8 438.67 249.27 463.38 249.27V249.28Z" fill="#000"/>
+          <path d="M1020.91 181.07H974.13C970.88 181.07 968.25 178.44 968.25 175.19V63.4C968.25 60.15 965.62 57.52 962.37 57.52H936.8C933.55 57.52 930.92 54.89 930.92 51.64V5.88C930.92 2.63 933.55 0 936.8 0H1020.9C1024.15 0 1026.78 2.63 1026.78 5.88V175.19C1026.78 178.44 1024.15 181.07 1020.9 181.07H1020.91Z" fill="#E6212F"/>
+          <path d="M98.27 288.98C74.71 288.98 57.18 282.8 45.69 270.45C34.48 258.09 28.88 241.29 28.88 220.02V129.46C28.88 127.11 26.97 125.2 24.62 125.2H6.39C2.86 125.2 0 122.34 0 118.81V86.77C0 83.24 2.86 80.38 6.39 80.38H22.49C26.02 80.38 28.88 77.52 28.88 73.99V25.56C28.88 22.03 31.74 19.17 35.27 19.17H80.67C84.2 19.17 87.06 22.03 87.06 25.56V73.98C87.06 77.51 89.92 80.37 93.45 80.37H131.88C135.6 80.37 138.54 83.54 138.25 87.25L135.79 119.29C135.53 122.62 132.76 125.19 129.42 125.19H93.46C89.93 125.19 87.07 128.05 87.07 131.58V216.13C87.07 227.34 89.66 235.1 94.83 239.41C100 243.43 108.05 245.44 118.97 245.44C124.33 245.44 129.82 244.8 135.43 243.53C139.68 242.56 143.96 245.64 143.96 250V278.36C143.96 280.09 142.92 281.66 141.29 282.26C135.71 284.32 129.7 285.84 123.27 286.83C115.8 288.27 107.47 288.99 98.27 288.99V288.98Z" fill="#000"/>
+          <path d="M269.01 287.64C233.67 287.64 205.65 278.88 184.96 261.35C164.27 243.53 153.93 216.67 153.93 180.75C153.93 148.28 162.55 122.56 179.79 103.6C197.32 84.35 223.32 74.72 257.8 74.72C289.41 74.72 313.54 83.05 330.21 99.72C347.16 116.1 355.64 137.65 355.64 164.37V197.18C355.64 199.53 353.73 201.44 351.38 201.44H207.81C210.97 217.82 218.44 229.02 230.22 235.06C242.29 241.1 259.24 244.11 281.08 244.11C292 244.11 303.06 243.1 314.27 241.09C321.83 239.77 328.64 238.19 334.71 236.37C339.02 235.08 343.58 238.2 343.58 242.71V271.96C343.58 273.63 342.61 275.16 341.07 275.8C332.16 279.55 321.94 282.35 310.4 284.18C297.76 286.48 283.97 287.63 269.02 287.63L269.01 287.64ZM207.8 165.66H304.78V154.45C304.78 142.67 301.33 133.47 294.44 126.87C287.54 119.97 275.91 116.53 259.53 116.53C240.28 116.53 226.77 120.41 219.02 128.17C211.55 135.93 207.81 148.43 207.81 165.67L207.8 165.66Z" fill="#000"/>
+        </svg>
+        <div class="eyebrow" style="margin:0;color:#E6212F">Team1 · Sponsor integration</div>
+      </div>
+      <h2 class="title tight reveal" data-step="1" style="--d:80ms">Avalanche Fuji C-Chain:<br>the canonical financial layer</h2>
+      <div class="num-grid reveal" data-step="2">
+        <div class="num-card">
+          <div class="num-card-num">01</div>
+          <h3>EscrowFactory on Fuji</h3>
+          <p>Deployed at <code style="font-family:monospace;font-size:13px;color:#E6212F">0xEe7328...F003</code>. Creates milestone escrow contracts where clients fund upfront in MockUSDT and providers claim on approval.</p>
+          <span class="tag" style="background:rgba(230,33,47,0.08);color:#E6212F">Track: Stablecoins That Do Real Work</span>
+        </div>
+        <div class="num-card">
+          <div class="num-card-num">02</div>
+          <h3>Avalanche Indexer</h3>
+          <p>The API reads <code style="font-family:monospace;font-size:13px;color:#E6212F">EscrowCreated</code>, <code style="font-family:monospace;font-size:13px;color:#E6212F">MilestoneApproved</code>, <code style="font-family:monospace;font-size:13px;color:#E6212F">Disputed</code> events from Fuji RPC starting block 58,333,416. Never signs transactions.</p>
+          <span class="tag" style="background:rgba(230,33,47,0.08);color:#E6212F">apps/api/src/indexer</span>
+        </div>
+        <div class="num-card">
+          <div class="num-card-num">03</div>
+          <h3>On-chain evidence commitment</h3>
+          <p>The escrow contract stores a keccak256 evidence hash per milestone. The API verifies the submitted descriptor matches before indexing in Arkiv. Payment is trustless.</p>
+          <span class="tag" style="background:rgba(230,33,47,0.08);color:#E6212F">MilestoneEscrow.sol</span>
+        </div>
+      </div>
+      <div class="reveal" data-step="3" style="margin-top:22px">
+        <div style="display:flex;gap:20px">
+          <div style="flex:1;background:#fff;border:1px solid rgba(230,33,47,0.12);border-radius:16px;padding:20px 24px;display:flex;gap:16px;align-items:flex-start">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#E6212F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <div>
+              <div style="font-size:15px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#E6212F;margin-bottom:6px">Verifiable onchain activity</div>
+              <div style="font-size:17px;color:#454545;line-height:1.4">MockUSDT: <code style="font-family:monospace;font-size:13px">0x42af67...fF35</code> · EscrowFactory: <code style="font-family:monospace;font-size:13px">0xEe732...F003</code> · Live contracts on Fuji</div>
+            </div>
+          </div>
+          <div style="flex:1;background:#fff;border:1px solid rgba(230,33,47,0.12);border-radius:16px;padding:20px 24px;display:flex;gap:16px;align-items:flex-start">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#E6212F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            <div>
+              <div style="font-size:15px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#E6212F;margin-bottom:6px">Complete user flow</div>
+              <div style="font-size:17px;color:#454545;line-height:1.4">Create deal → fund escrow → deliver evidence → approve milestone → payment released. All on-chain, all verifiable, reputation updated automatically.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">08</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 09 SPONSOR: ENS ──────────── -->
+  <section data-label="09 ENS" data-steps="2" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/2</span></div>
+      <div style="display:flex;align-items:center;gap:28px;margin-bottom:28px" class="reveal" data-step="1">
+        <svg viewBox="0 0 153 48" style="height:30px;width:auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M136.725 41.869C128.878 41.869 122.326 38.7562 121.456 31.3205C121.429 31.0905 121.594 30.8821 121.824 30.8528L129.875 29.8221C130.127 29.7897 130.351 29.9831 130.373 30.2364C130.696 33.9403 133.316 35.6137 136.926 35.6137C140.754 35.6137 142.702 34.2011 142.702 31.7125C142.702 29.4928 140.15 28.6857 134.844 27.4077C128.398 25.8607 122.488 23.8429 122.488 16.9149C122.488 9.51604 129.002 6.62377 136.255 6.62377C143.509 6.62377 149.728 9.02385 150.775 16.3721C150.808 16.599 150.651 16.8105 150.426 16.8489L142.642 18.1786C142.387 18.222 142.153 18.0324 142.126 17.7756C141.766 14.3489 139.599 12.8119 136.389 12.8119C133.636 12.8119 131.352 13.8208 131.352 16.175C131.352 18.4619 133.77 19.2691 138.27 20.2779C144.246 21.6232 151.701 23.2375 151.701 31.2417C151.701 39.3131 144.582 41.869 136.725 41.869Z" fill="#5C6BC0"/>
+          <path d="M116.199 9.8276C118.886 12.5181 119.221 16.1502 119.221 20.5223V41.1449C119.221 41.3833 119.028 41.5766 118.79 41.5766H110.183C109.945 41.5766 109.752 41.3833 109.752 41.1449V21.3294C109.752 18.2353 109.484 16.6211 108.006 15.2086C106.797 14.0651 105.656 13.8633 103.641 13.8633C100.753 13.8633 97.3955 15.8139 97.3955 22.7418V41.1449C97.3955 41.3833 97.2025 41.5766 96.9645 41.5766H88.4246C88.1865 41.5766 87.9936 41.3833 87.9936 41.1449V7.90514C87.9936 7.66672 88.1865 7.47343 88.4246 7.47343H96.8973C97.1353 7.47343 97.3283 7.66672 97.3283 7.90514V11.5654C97.3283 11.7722 97.6352 11.8376 97.7313 11.6546C99.6208 8.05942 103.212 6.66628 107.268 6.66628C111.566 6.66628 114.05 7.67521 116.199 9.8276Z" fill="#5C6BC0"/>
+          <path d="M80.5534 10.9502C83.8138 14.271 85.4563 19.3182 85.5946 25.7099C85.5997 25.9449 85.4138 26.1397 85.1795 26.1471L61.4706 26.8978C61.2306 26.9054 61.0425 27.109 61.059 27.3488C61.4267 32.7014 64.1877 35.3583 69.0902 35.2031C73.2271 35.0721 75.315 33.1962 75.9649 29.9165C76.0078 29.6993 76.2013 29.5418 76.422 29.5542L84.6796 30.0213C84.9454 30.0362 85.1342 30.2887 85.0689 30.5473C83.2335 37.8135 77.768 41.5906 69.3004 41.8587C64.0646 42.0244 59.85 40.4755 56.9439 37.8083C53.6222 34.7506 51.8713 30.3646 51.6931 24.7173C51.5232 19.3391 52.8557 14.7208 56.0451 11.4569C58.9071 8.47259 62.8858 6.79883 68.1214 6.63307C73.424 6.46518 77.6388 8.01414 80.5534 10.9502ZM68.3272 13.1542C65.5751 13.2414 63.654 14.1097 62.4318 15.8308C61.6104 16.9604 61.1323 18.3582 60.9447 19.9754C60.915 20.2309 61.1225 20.4484 61.3792 20.4403L75.3919 19.9965C75.6462 19.9886 75.8389 19.7624 75.7992 19.5106C75.5048 17.6418 74.9116 16.0781 73.7586 14.9339C72.4408 13.6296 70.7436 13.0777 68.3272 13.1542Z" fill="#5C6BC0"/>
+          <path d="M21.2673 1.34031L8.38001 22.5455C8.27894 22.7118 8.04411 22.7303 7.91874 22.5814C6.7842 21.2343 2.55742 15.5033 7.78763 10.2797C12.5602 5.51325 18.6392 2.11486 20.8921 0.940306C21.1477 0.807047 21.4169 1.09416 21.2673 1.34031Z" fill="#5C6BC0"/>
+          <path d="M20.5455 47.5152C20.8027 47.6951 21.1196 47.3881 20.9472 47.126C18.0687 42.7477 8.49998 28.1803 7.17816 25.9934C5.87442 23.8366 3.31015 20.252 3.09624 17.1853C3.07488 16.879 2.65153 16.817 2.54503 17.1049C2.37328 17.5691 2.19042 18.1233 2.02 18.7565C-0.131411 26.7484 2.9931 35.2292 9.77889 39.9788L20.5455 47.5152Z" fill="#5C6BC0"/>
+          <path d="M22.3152 47.1319L35.2025 25.9266C35.3036 25.7604 35.5385 25.7419 35.6639 25.8907C36.7984 27.2378 41.0251 32.9688 35.795 38.1924C31.0224 42.9589 24.9435 46.3573 22.6906 47.5317C22.435 47.665 22.1656 47.3779 22.3152 47.1319Z" fill="#5C6BC0"/>
+          <path d="M23.0331 0.960402C22.776 0.780379 22.459 1.08739 22.6315 1.34957C25.51 5.72779 35.0788 20.2952 36.4005 22.482C37.7043 24.6389 40.2685 28.2234 40.4825 31.2903C40.5038 31.5964 40.9272 31.6587 41.0337 31.3708C41.2054 30.9063 41.3882 30.3521 41.5587 29.7189C43.7101 21.7271 40.5856 13.2464 33.7998 8.49661L23.0331 0.960402Z" fill="#5C6BC0"/>
+        </svg>
+        <div class="eyebrow" style="margin:0;color:#5C6BC0">Sponsor integration</div>
+      </div>
+      <h2 class="title tight reveal" data-step="1" style="--d:80ms">ENS: human-readable addresses<br>across the entire UI</h2>
+      <div class="reveal" data-step="1" style="--d:160ms;flex:1;display:flex;flex-direction:column;gap:28px;justify-content:center">
+        <div style="background:#fff;border:1px solid rgba(92,107,192,0.15);border-radius:24px;padding:40px 50px;box-shadow:var(--cs-shadow-2)">
+          <div style="font-size:18px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#5C6BC0;margin-bottom:20px">WalletAddress component · financial.tsx</div>
+          <div style="background:#0F1117;border-radius:14px;padding:28px 32px;font-family:monospace;font-size:20px;line-height:1.7;color:#e8eaed">
+            <span style="color:#7C71FF">const</span> { <span style="color:#89DDFF">data</span>: ensName } = <span style="color:#82AAFF">useEnsName</span>({<br>
+            &nbsp;&nbsp;<span style="color:#89DDFF">address</span>: ensAddress,<br>
+            &nbsp;&nbsp;<span style="color:#89DDFF">chainId</span>: mainnet.id,  <span style="color:#546E7A">// ENS resolves on L1</span><br>
+            &nbsp;&nbsp;<span style="color:#89DDFF">query</span>: { <span style="color:#89DDFF">enabled</span>: Boolean(ensAddress) },<br>
+            })<br><br>
+            <span style="color:#546E7A">// Display: ENS name if resolved, truncated hex as fallback</span><br>
+            {ensName ?? `${address.slice(0,6)}<span style="color:#C3E88D">…</span>${address.slice(-4)}`}
+          </div>
+        </div>
+        <div class="reveal" data-step="2" style="display:flex;gap:24px">
+          <div class="ens-row" style="flex:1">
+            <div class="ens-code">
+              <div class="addr-ens" style="font-size:26px;font-weight:700">vitalik.eth</div>
+              <div class="addr-raw" style="font-size:16px;margin-top:6px">0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;font-size:28px;color:var(--cs-muted);padding:0 8px">→</div>
+          <div class="ens-row" style="flex:1;background:rgba(92,107,192,0.04);border-color:rgba(92,107,192,0.20)">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#5C6BC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <div class="ens-code" style="font-size:22px;color:#5C6BC0;font-weight:700">Displayed as "vitalik.eth" everywhere</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">09</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 10 SPONSOR OVERVIEW ──────────── -->
+  <section class="dark" data-label="10 Sponsors" data-steps="1" data-current-step="1">
+    <div class="pad">
+      <div class="eyebrow">Built with</div>
+      <h2 class="title white tight">Four sponsors, one protocol</h2>
+      <div class="sponsor-grid">
+        <!-- Arkiv -->
+        <div class="sponsor-card" style="border-color:rgba(124,58,237,0.30);background:rgba(124,58,237,0.06)">
+          <svg width="110" height="26" viewBox="0 0 1389 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 320V0H72.8152V48.4233H48.3167V271.577H72.8152V320H0Z" fill="white"/>
+            <path d="M341.97 265.82L325.297 214.688H249.76L232.747 265.82H181.028V246.857L259.968 28.7831H317.471L396.752 246.857V265.82H341.97ZM287.869 101.249L266.092 165.926H308.965L287.869 101.249Z" fill="white"/>
+            <path d="M434.201 265.82V28.7831H538.66C589.699 28.7831 615.559 56.8889 615.559 103.958C615.559 134.772 601.948 159.153 579.151 172.698L623.045 246.857V265.82H566.221L517.224 179.132H492.726V265.82H434.201ZM492.726 131.048H528.793C546.146 131.048 556.354 125.63 556.354 104.974C556.354 84.9947 546.146 79.5767 528.793 79.5767H492.726V131.048Z" fill="white"/>
+            <path d="M671.199 265.82V28.7831H729.723V121.905H750.819L803.559 28.7831H855.279V48.0847L798.796 143.915L860.382 246.857V265.82H804.92L751.84 172.698H729.723V265.82H671.199Z" fill="white"/>
+            <path d="M899.89 265.82V28.7831H958.414V265.82H899.89Z" fill="white"/>
+            <path d="M1075.05 265.82L996.106 48.0847V28.7831H1052.25L1104.99 187.598L1156.03 28.7831H1211.49V48.0847L1132.89 265.82H1075.05Z" fill="white"/>
+            <path d="M1389 0V320H1316.18V271.577H1340.68V48.4233H1316.18V0H1389Z" fill="white"/>
+          </svg>
+          <div class="sponsor-name">Arkiv</div>
+          <div class="sponsor-role">Protocol Index</div>
+          <div style="font-size:16px;color:rgba(255,255,255,0.55);line-height:1.5;text-align:left">Trusted writer model, 180-day TTL, 8 entity types. The backbone of all deal history and reputation.</div>
+        </div>
+        <!-- Avalanche / Team1 -->
+        <div class="sponsor-card" style="border-color:rgba(230,33,47,0.30);background:rgba(230,33,47,0.06)">
+          <svg viewBox="0 0 1027 289" style="height:30px;width:auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M608.94 283.33V85.36C608.94 81.86 611.76 79.01 615.26 78.97L658.51 78.52C662.06 78.48 664.97 81.36 664.97 84.91V98.86C674.74 91.39 685.37 85.5 696.86 81.19C708.64 76.88 721.28 74.73 734.79 74.73C749.16 74.73 760.22 76.88 767.98 81.19C776.02 85.5 782.2 91.68 786.51 99.72C795.99 92.25 806.77 86.22 818.84 81.62C831.2 77.02 845.7 74.72 862.37 74.72C885.93 74.72 903.32 80.9 914.52 93.25C925.73 105.32 931.33 123.85 931.33 148.85V283.32H874.01V155.31C874.01 141.81 871.14 132.18 865.39 126.43C859.64 120.4 850.45 117.38 837.81 117.38C820.57 117.38 808.36 123.56 796.86 135.91V283.31H742.56V155.3C742.56 142.66 740.4 133.18 736.09 126.85C731.78 120.53 723.45 117.37 711.09 117.37C702.47 117.37 694.28 119.67 686.52 124.27C679.05 128.58 672.3 133.61 666.26 139.36V283.31H608.94V283.33Z" fill="white"/>
+            <path d="M447.44 287.64C434.51 287.64 422.44 285.34 411.24 280.74V92.01C399.18 89.38 400.78 87.01 403.26 86.14C411.9 83.1 422.04 80.59 433.66 78.61C447.45 76.02 462.39 74.73 478.48 74.73C509.23 74.73 532.93 81.05 549.6 93.69C566.55 106.05 575.03 126.02 575.03 153.6V283.33L521.59 282.52V264.79C513.54 271.97 503.63 277.58 491.85 281.6C480.07 285.62 465.27 287.64 447.46 287.64H447.44Z" fill="white"/>
+            <path d="M1020.91 181.07H974.13C970.88 181.07 968.25 178.44 968.25 175.19V63.4C968.25 60.15 965.62 57.52 962.37 57.52H936.8C933.55 57.52 930.92 54.89 930.92 51.64V5.88C930.92 2.63 933.55 0 936.8 0H1020.9C1024.15 0 1026.78 2.63 1026.78 5.88V175.19C1026.78 178.44 1024.15 181.07 1020.9 181.07H1020.91Z" fill="#E6212F"/>
+            <path d="M98.27 288.98C74.71 288.98 57.18 282.8 45.69 270.45C34.48 258.09 28.88 241.29 28.88 220.02V129.46C28.88 127.11 26.97 125.2 24.62 125.2H6.39C2.86 125.2 0 122.34 0 118.81V86.77C0 83.24 2.86 80.38 6.39 80.38H22.49C26.02 80.38 28.88 77.52 28.88 73.99V25.56C28.88 22.03 31.74 19.17 35.27 19.17H80.67C84.2 19.17 87.06 22.03 87.06 25.56V73.98C87.06 77.51 89.92 80.37 93.45 80.37H131.88V119.29C132.76 122.62 129.42 125.19 93.46 125.19H87.07V216.13C87.07 227.34 89.66 235.1 94.83 239.41C100 243.43 108.05 245.44 118.97 245.44C124.33 245.44 129.82 244.8 135.43 243.53C139.68 242.56 143.96 245.64 143.96 250V278.36C143.96 280.09 142.92 281.66 141.29 282.26C129.7 285.84 123.27 286.83 115.8 288.27L98.27 288.99V288.98Z" fill="white"/>
+          </svg>
+          <div class="sponsor-name">Avalanche · Team1</div>
+          <div class="sponsor-role">Financial Settlement</div>
+          <div style="font-size:16px;color:rgba(255,255,255,0.55);line-height:1.5;text-align:left">Fuji C-Chain escrow contracts. MockUSDT payments. On-chain evidence commitments. Full end-to-end stablecoin flow.</div>
+        </div>
+        <!-- Swarm -->
+        <div class="sponsor-card" style="border-color:rgba(254,121,0,0.30);background:rgba(254,121,0,0.05)">
+          <svg viewBox="0 0 948 1115" style="height:44px;width:auto" fill="#fe7900">
+            <path d="M0 665.01V965l260 150 260-150.01V664.96L260 515 0 665.01zM855 515 595 665v299.99L855 1115l260-150.01V664.95L855 515zM817.32 300.27l-129.91-75.25-.13-149.98L557.5 0 297.68 150.01V450L557.5 600l259.82-150V300.27z"/>
+            <path d="m817.32 300.27 129.91-75.3V75L817.52 0 687.28 75.04l130.24 74.83-.2 150.4z"/>
+          </svg>
+          <div class="sponsor-name">Swarm</div>
+          <div class="sponsor-role">Private Evidence Transport</div>
+          <div style="font-size:16px;color:rgba(255,255,255,0.55);line-height:1.5;text-align:left">ACT encrypted uploads, browser-side keys, selective access for arbiters. Three Arkiv missions addressed.</div>
+        </div>
+        <!-- ENS -->
+        <div class="sponsor-card" style="border-color:rgba(92,107,192,0.30);background:rgba(92,107,192,0.06)">
+          <svg viewBox="0 0 153 48" style="height:30px;width:auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M136.725 41.869C128.878 41.869 122.326 38.7562 121.456 31.3205L129.875 29.8221C130.696 33.9403 133.316 35.6137 136.926 35.6137C140.754 35.6137 142.702 34.2011 142.702 31.7125C142.702 29.4928 140.15 28.6857 134.844 27.4077C128.398 25.8607 122.488 23.8429 122.488 16.9149C122.488 9.51604 129.002 6.62377 136.255 6.62377C143.509 6.62377 149.728 9.02385 150.775 16.3721L142.642 18.1786C141.766 14.3489 139.599 12.8119 136.389 12.8119C133.636 12.8119 131.352 13.8208 131.352 16.175C131.352 18.4619 133.77 19.2691 138.27 20.2779C144.246 21.6232 151.701 23.2375 151.701 31.2417C151.701 39.3131 144.582 41.869 136.725 41.869Z" fill="white"/>
+            <path d="M116.199 9.8276C118.886 12.5181 119.221 16.1502 119.221 20.5223V41.1449H109.752V21.3294C109.752 18.2353 109.484 16.6211 108.006 15.2086C106.797 14.0651 105.656 13.8633 103.641 13.8633C100.753 13.8633 97.3955 15.8139 97.3955 22.7418V41.1449H87.9936V7.90514H96.8973V11.5654C99.6208 8.05942 103.212 6.66628 107.268 6.66628C111.566 6.66628 114.05 7.67521 116.199 9.8276Z" fill="white"/>
+            <path d="M80.5534 10.9502C83.8138 14.271 85.4563 19.3182 85.5946 25.7099L61.4706 26.8978C61.4267 32.7014 64.1877 35.3583 69.0902 35.2031C73.2271 35.0721 75.315 33.1962 75.9649 29.9165L84.6796 30.0213C83.2335 37.8135 77.768 41.5906 69.3004 41.8587C64.0646 42.0244 59.85 40.4755 56.9439 37.8083C53.6222 34.7506 51.8713 30.3646 51.6931 24.7173C51.5232 19.3391 52.8557 14.7208 56.0451 11.4569C58.9071 8.47259 62.8858 6.79883 68.1214 6.63307C73.424 6.46518 77.6388 8.01414 80.5534 10.9502Z" fill="white"/>
+            <path d="M21.2673 1.34031L8.38001 22.5455C6.7842 21.2343 2.55742 15.5033 7.78763 10.2797C12.5602 5.51325 18.6392 2.11486 20.8921 0.940306C21.1477 0.807047 21.4169 1.09416 21.2673 1.34031Z" fill="white"/>
+            <path d="M20.5455 47.5152C18.0687 42.7477 8.49998 28.1803 7.17816 25.9934C5.87442 23.8366 3.31015 20.252 3.09624 17.1853C2.54503 17.1049C2.37328 17.5691 2.19042 18.1233 2.02 18.7565C-0.131411 26.7484 2.9931 35.2292 9.77889 39.9788L20.5455 47.5152Z" fill="white"/>
+            <path d="M22.3152 47.1319L35.2025 25.9266C36.7984 27.2378 41.0251 32.9688 35.795 38.1924C31.0224 42.9589 24.9435 46.3573 22.6906 47.5317C22.435 47.665 22.1656 47.3779 22.3152 47.1319Z" fill="white"/>
+            <path d="M23.0331 0.960402C25.51 5.72779 35.0788 20.2952 36.4005 22.482C37.7043 24.6389 40.2685 28.2234 40.4825 31.2903C41.0337 31.3708C41.2054 30.9063 41.3882 30.3521 41.5587 29.7189C43.7101 21.7271 40.5856 13.2464 33.7998 8.49661L23.0331 0.960402Z" fill="white"/>
+          </svg>
+          <div class="sponsor-name">ENS</div>
+          <div class="sponsor-role">Identity Layer</div>
+          <div style="font-size:16px;color:rgba(255,255,255,0.55);line-height:1.5;text-align:left">useEnsName resolves all wallet addresses to human-readable names across the entire MilestonePay UI.</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">10</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 11 BOUNTIES ──────────── -->
+  <section data-label="11 Bounties" data-steps="3" data-current-step="0">
+    <div class="sweep"></div>
+    <div class="pad">
+      <div class="act-marker"><span class="step-num">1</span><span style="opacity:.4">/3</span></div>
+      <div class="eyebrow reveal" data-step="1">Prize targets</div>
+      <h2 class="title tight reveal" data-step="1" style="--d:80ms">Competing for five bounty lines</h2>
+      <div class="bounty-grid reveal" data-step="2">
+        <div class="bounty-card arkiv-bg">
+          <div class="bounty-logo">
+            <svg width="80" height="18" viewBox="0 0 1389 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 320V0H72.8152V48.4233H48.3167V271.577H72.8152V320H0Z" fill="rgba(255,255,255,0.7)"/>
+              <path d="M341.97 265.82L325.297 214.688H249.76L232.747 265.82H181.028V246.857L259.968 28.7831H317.471L396.752 246.857V265.82H341.97ZM287.869 101.249L266.092 165.926H308.965L287.869 101.249Z" fill="rgba(255,255,255,0.7)"/>
+              <path d="M434.201 265.82V28.7831H538.66C589.699 28.7831 615.559 56.8889 615.559 103.958C615.559 134.772 601.948 159.153 579.151 172.698L623.045 246.857V265.82H566.221L517.224 179.132H492.726V265.82H434.201Z" fill="rgba(255,255,255,0.7)"/>
+              <path d="M671.199 265.82V28.7831H729.723V121.905H750.819L803.559 28.7831H855.279V48.0847L798.796 143.915L860.382 246.857V265.82H804.92L751.84 172.698H729.723V265.82H671.199Z" fill="rgba(255,255,255,0.7)"/>
+              <path d="M899.89 265.82V28.7831H958.414V265.82H899.89Z" fill="rgba(255,255,255,0.7)"/>
+              <path d="M1075.05 265.82L996.106 48.0847V28.7831H1052.25L1104.99 187.598L1156.03 28.7831H1211.49V48.0847L1132.89 265.82H1075.05Z" fill="rgba(255,255,255,0.7)"/>
+              <path d="M1389 0V320H1316.18V271.577H1340.68V48.4233H1316.18V0H1389Z" fill="rgba(255,255,255,0.7)"/>
+            </svg>
+          </div>
+          <h3>Arkiv Bounties</h3>
+          <p>M01 Decommission, M02 Built to Expire, M03 Live Wire all addressed by Swarm ACT + Arkiv integration. Plus Best Use of Arkiv.</p>
+          <div class="bounty-amount">EUR 2,500 <span>pool</span></div>
+        </div>
+        <div class="bounty-card avax-bg">
+          <div class="bounty-logo">
+            <svg viewBox="0 0 1027 289" style="height:22px;width:auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1020.91 181.07H974.13C970.88 181.07 968.25 178.44 968.25 175.19V63.4C968.25 60.15 965.62 57.52 962.37 57.52H936.8C933.55 57.52 930.92 54.89 930.92 51.64V5.88C930.92 2.63 933.55 0 936.8 0H1020.9C1024.15 0 1026.78 2.63 1026.78 5.88V175.19C1026.78 178.44 1024.15 181.07 1020.9 181.07H1020.91Z" fill="#E6212F"/>
+              <rect x="0" y="50" width="900" height="40" rx="8" fill="rgba(255,255,255,0.5)"/>
+              <rect x="0" y="140" width="700" height="40" rx="8" fill="rgba(255,255,255,0.5)"/>
+              <rect x="0" y="220" width="800" height="40" rx="8" fill="rgba(255,255,255,0.5)"/>
+            </svg>
+          </div>
+          <h3>Team1 · Stablecoins That Do Real Work</h3>
+          <p>Complete stablecoin payment flow — escrow, milestone releases, verifiable on-chain activity with MockUSDT on Fuji C-Chain.</p>
+          <div class="bounty-amount">$600 <span>track</span></div>
+        </div>
+      </div>
+      <div class="reveal" data-step="3" style="margin-top:20px;display:flex;gap:20px">
+        <div style="flex:1;background:#fff;border:1px solid var(--cs-border);border-radius:16px;padding:22px 28px;display:flex;gap:16px;align-items:center;box-shadow:var(--cs-shadow-1)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div style="font-size:18px;color:#454545;line-height:1.4"><strong style="color:#000">Swarm:</strong> ACT + evidence sealing directly addresses all three Arkiv missions simultaneously</div>
+        </div>
+        <div style="flex:1;background:#fff;border:1px solid var(--cs-border);border-radius:16px;padding:22px 28px;display:flex;gap:16px;align-items:center;box-shadow:var(--cs-shadow-1)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div style="font-size:18px;color:#454545;line-height:1.4"><strong style="color:#000">Arkiv:</strong> 8 entity types, trusted writer, idempotent indexing — provably not replaceable by a Web2 database</div>
+        </div>
+        <div style="flex:1;background:#fff;border:1px solid var(--cs-border);border-radius:16px;padding:22px 28px;display:flex;gap:16px;align-items:center;box-shadow:var(--cs-shadow-1)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <div style="font-size:18px;color:#454545;line-height:1.4"><strong style="color:#000">Avalanche:</strong> live contracts on Fuji, 6+ escrow agreements created during hackathon, complete stablecoin UX</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="left"></div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">11</span></div>
+    </div>
+  </section>
+
+  <!-- ──────────── 12 CLOSING ──────────── -->
+  <section class="grad" data-label="12 Closing" data-steps="1" data-current-step="1">
+    <div class="pad center">
+      <div class="eyebrow">ETHRome 2026 · Rome</div>
+      <h1 class="cover-md">Stake it.<br>Prove it.<br>Get paid.</h1>
+      <div class="subtitle">github.com/lollopanta/MilestonePay · Deployed on Avalanche Fuji</div>
+    </div>
+    <div class="footer">
+      <div class="left">
+        <svg viewBox="0 0 414 333.5" style="height:32px;width:auto">
+          <polygon style="fill:#8C63FF" points="207,127 276.282,167 207,207 137.718,167"/>
+          <polygon style="fill:#5C2EE8" points="137.718,167 207,207 207,287 137.718,247"/>
+          <polygon style="fill:#3A19AB" points="207,207 276.282,167 276.282,247 207,287"/>
+          <circle style="fill:#00E5A3" cx="207" cy="31" r="11"/>
+          <line style="fill:none;stroke:#00E5A3;stroke-width:7;stroke-linecap:round" x1="207" y1="112" x2="207" y2="42"/>
+          <circle style="fill:#FF5B4E" cx="31" cy="207" r="11"/>
+          <line style="fill:none;stroke:#FF5B4E;stroke-width:7;stroke-linecap:round" x1="112" y1="207" x2="42" y2="207"/>
+          <circle style="fill:#0075FF" cx="383" cy="207" r="11"/>
+          <line style="fill:none;stroke:#0075FF;stroke-width:7;stroke-linecap:round" x1="302" y1="207" x2="372" y2="207"/>
+        </svg>
+      </div>
+      <div>MilestonePay · ETHRome 2026 · <span class="num">12</span></div>
+    </div>
+  </section>
+
+</deck-stage>
+
+<!-- Viewer chrome -->
+<div id="progress-bar"></div>
+<button id="fs-btn" type="button" aria-label="Toggle fullscreen" title="Fullscreen">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M21 15v4a2 2 0 0 1-2 2h-4M3 15v4a2 2 0 0 0 2 2h4"/>
+  </svg>
+</button>
+
+<script>
+  (() => {
+    const DESIGN_W_DEFAULT = 1920;
+    const DESIGN_H_DEFAULT = 1080;
+    const OVERLAY_HIDE_MS = 1800;
+    const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    const stylesheet = `
+      :host { position: fixed; inset: 0; display: block; background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; }
+      .stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .canvas { position: relative; transform-origin: center center; flex-shrink: 0; background: #fff; will-change: transform; }
+      ::slotted(*) { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; box-sizing: border-box !important; overflow: hidden; opacity: 0; pointer-events: none; visibility: hidden; }
+      ::slotted([data-deck-active]) { opacity: 1; pointer-events: auto; visibility: visible; }
+      .tapzones { position: fixed; inset: 0; display: flex; z-index: 2147482000; pointer-events: none; }
+      .tapzone { flex: 1; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+      @media (hover: hover) and (pointer: fine) { .tapzones { display: none; } }
+      .overlay { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 6px) scale(0.92); filter: blur(6px); display: flex; align-items: center; gap: 4px; padding: 4px; background: #000; color: #fff; border-radius: 999px; font-size: 12px; opacity: 0; pointer-events: none; transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), filter 260ms ease; z-index: 2147483000; user-select: none; }
+      .overlay[data-visible] { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); filter: blur(0); }
+      .btn { appearance: none; background: transparent; border: 0; margin: 0; padding: 0; color: rgba(255,255,255,0.72); font: inherit; cursor: default; display: inline-flex; align-items: center; justify-content: center; height: 28px; min-width: 28px; border-radius: 999px; transition: background 140ms ease, color 140ms ease; -webkit-tap-highlight-color: transparent; }
+      .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+      .btn svg { width: 14px; height: 14px; display: block; }
+      .btn.reset { font-size: 11px; font-weight: 500; padding: 0 10px 0 12px; gap: 6px; }
+      .btn.reset .kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; padding: 0 4px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 10px; line-height: 1; color: rgba(255,255,255,0.88); background: rgba(255,255,255,0.12); border-radius: 4px; }
+      .count { font-variant-numeric: tabular-nums; color: #fff; font-weight: 500; padding: 0 8px; min-width: 42px; text-align: center; font-size: 12px; }
+      .count .sep { color: rgba(255,255,255,0.45); margin: 0 3px; }
+      .count .total { color: rgba(255,255,255,0.55); }
+      .divider { width: 1px; height: 14px; background: rgba(255,255,255,0.18); margin: 0 2px; }
+      @media print {
+        :host { position: static; inset: auto; background: none; overflow: visible; color: inherit; }
+        .stage { position: static; display: block; }
+        .canvas { transform: none !important; width: auto !important; height: auto !important; background: none; will-change: auto; }
+        ::slotted(*) { position: relative !important; inset: auto !important; width: var(--deck-design-w) !important; height: var(--deck-design-h) !important; box-sizing: border-box !important; opacity: 1 !important; visibility: visible !important; pointer-events: auto; break-after: page; page-break-after: always; break-inside: avoid; overflow: hidden; }
+        ::slotted(*:last-child) { break-after: auto; page-break-after: auto; }
+        .overlay, .tapzones { display: none !important; }
+      }
+    `;
+
+    class DeckStage extends HTMLElement {
+      static get observedAttributes() { return ['width', 'height', 'noscale']; }
+      constructor() {
+        super();
+        this._root = this.attachShadow({ mode: 'open' });
+        this._index = 0; this._slides = []; this._notes = []; this._hideTimer = null;
+        this._onKey = this._onKey.bind(this); this._onResize = this._onResize.bind(this);
+        this._onSlotChange = this._onSlotChange.bind(this); this._onMouseMove = this._onMouseMove.bind(this);
+        this._onTapBack = this._onTapBack.bind(this); this._onTapForward = this._onTapForward.bind(this);
+      }
+      get designWidth() { return parseInt(this.getAttribute('width'), 10) || DESIGN_W_DEFAULT; }
+      get designHeight() { return parseInt(this.getAttribute('height'), 10) || DESIGN_H_DEFAULT; }
+      connectedCallback() {
+        this._render(); this._loadNotes(); this._syncPrintPageRule();
+        window.addEventListener('keydown', this._onKey); window.addEventListener('resize', this._onResize);
+        window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      }
+      disconnectedCallback() {
+        window.removeEventListener('keydown', this._onKey); window.removeEventListener('resize', this._onResize);
+        window.removeEventListener('mousemove', this._onMouseMove);
+        if (this._hideTimer) clearTimeout(this._hideTimer);
+      }
+      attributeChangedCallback() {
+        if (this._canvas) {
+          this._canvas.style.width = this.designWidth + 'px'; this._canvas.style.height = this.designHeight + 'px';
+          this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+          this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+          this._fit(); this._syncPrintPageRule();
+        }
+      }
+      _render() {
+        const style = document.createElement('style'); style.textContent = stylesheet;
+        const stage = document.createElement('div'); stage.className = 'stage';
+        const canvas = document.createElement('div'); canvas.className = 'canvas';
+        canvas.style.width = this.designWidth + 'px'; canvas.style.height = this.designHeight + 'px';
+        canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+        canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+        const slot = document.createElement('slot'); slot.addEventListener('slotchange', this._onSlotChange);
+        canvas.appendChild(slot); stage.appendChild(canvas);
+        const tapzones = document.createElement('div'); tapzones.className = 'tapzones'; tapzones.setAttribute('aria-hidden', 'true');
+        const tzBack = document.createElement('div'); tzBack.className = 'tapzone tapzone--back';
+        const tzMid = document.createElement('div'); tzMid.className = 'tapzone tapzone--mid'; tzMid.style.pointerEvents = 'none';
+        const tzFwd = document.createElement('div'); tzFwd.className = 'tapzone tapzone--fwd';
+        tzBack.addEventListener('click', this._onTapBack); tzFwd.addEventListener('click', this._onTapForward);
+        tapzones.append(tzBack, tzMid, tzFwd);
+        const overlay = document.createElement('div'); overlay.className = 'overlay';
+        overlay.setAttribute('role', 'toolbar'); overlay.setAttribute('aria-label', 'Deck controls');
+        overlay.innerHTML =
+          '<button class="btn prev" type="button" aria-label="Previous slide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg></button>' +
+          '<span class="count" aria-live="polite"><span class="current">1</span><span class="sep">/</span><span class="total">1</span></span>' +
+          '<button class="btn next" type="button" aria-label="Next slide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></button>' +
+          '<span class="divider"></span><button class="btn reset" type="button">Reset<span class="kbd">R</span></button>';
+        overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
+        overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
+        overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
+        this._root.append(style, stage, tapzones, overlay);
+        this._canvas = canvas; this._slot = slot; this._overlay = overlay;
+        this._countEl = overlay.querySelector('.current'); this._totalEl = overlay.querySelector('.total');
+      }
+      _syncPrintPageRule() {
+        const id = 'deck-stage-print-page'; let tag = document.getElementById(id);
+        if (!tag) { tag = document.createElement('style'); tag.id = id; document.head.appendChild(tag); }
+        tag.textContent = '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } @media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+      }
+      _onSlotChange() { this._collectSlides(); this._restoreIndex(); this._applyIndex({ showOverlay: false, broadcast: true, reason: 'init' }); this._fit(); }
+      _collectSlides() {
+        const assigned = this._slot.assignedElements({ flatten: true });
+        this._slides = assigned.filter((el) => { const tag = el.tagName; return tag !== 'TEMPLATE' && tag !== 'SCRIPT' && tag !== 'STYLE'; });
+        this._slides.forEach((slide, i) => {
+          const n = i + 1; let label = slide.getAttribute('data-label');
+          if (!label) { const h = slide.querySelector('h1, h2, h3, [data-title]'); if (h) label = (h.textContent || '').trim().slice(0, 40); }
+          if (!label) label = 'Slide';
+          slide.setAttribute('data-screen-label', `${pad2(n)} ${label}`);
+          if (!slide.hasAttribute('data-om-validate')) slide.setAttribute('data-om-validate', VALIDATE_ATTR);
+          slide.setAttribute('data-deck-slide', String(i));
+        });
+        if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1);
+        if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1);
+      }
+      _loadNotes() { this._notes = []; }
+      _restoreIndex() {
+        const h = (location.hash || '').match(/^#(\d+)$/);
+        if (h) { const n = parseInt(h[1], 10) - 1; if (n >= 0 && n < this._slides.length) this._index = n; }
+      }
+      _applyIndex({ showOverlay = true, broadcast = true, reason = 'init' } = {}) {
+        if (!this._slides.length) return;
+        const curr = this._index;
+        try { history.replaceState(null, '', '#' + (curr + 1)); } catch (e) {}
+        this._slides.forEach((s, i) => { if (i === curr) s.setAttribute('data-deck-active', ''); else s.removeAttribute('data-deck-active'); });
+        if (this._countEl) this._countEl.textContent = String(curr + 1);
+        if (broadcast) { try { window.postMessage({ slideIndexChanged: curr }, '*'); } catch (e) {} }
+        this._prevIndex = curr;
+        if (showOverlay) this._flashOverlay();
+      }
+      _flashOverlay() {
+        if (!this._overlay) return;
+        this._overlay.setAttribute('data-visible', '');
+        if (this._hideTimer) clearTimeout(this._hideTimer);
+        this._hideTimer = setTimeout(() => { this._overlay.removeAttribute('data-visible'); }, OVERLAY_HIDE_MS);
+      }
+      _fit() {
+        if (!this._canvas) return;
+        if (this.hasAttribute('noscale')) { this._canvas.style.transform = 'none'; return; }
+        const vw = window.innerWidth; const vh = window.innerHeight;
+        const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+        this._canvas.style.transform = `scale(${s})`;
+      }
+      _onResize() { this._fit(); }
+      _onMouseMove() { this._flashOverlay(); }
+      _onTapBack(e) { e.preventDefault(); this._go(this._index - 1, 'tap'); }
+      _onTapForward(e) { e.preventDefault(); this._go(this._index + 1, 'tap'); }
+      _onKey(e) {
+        const t = e.target;
+        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const key = e.key; let handled = true;
+        if (key === 'ArrowRight' || key === 'PageDown' || key === ' ' || key === 'Spacebar') this._go(this._index + 1, 'keyboard');
+        else if (key === 'ArrowLeft' || key === 'PageUp') this._go(this._index - 1, 'keyboard');
+        else if (key === 'Home') this._go(0, 'keyboard');
+        else if (key === 'End') this._go(this._slides.length - 1, 'keyboard');
+        else if (key === 'r' || key === 'R') this._go(0, 'keyboard');
+        else handled = false;
+        if (handled) { e.preventDefault(); }
+      }
+      _go(i, reason = 'api') {
+        if (!this._slides.length) return;
+        const clamped = Math.max(0, Math.min(this._slides.length - 1, i));
+        if (clamped === this._index) { return; }
+        this._index = clamped; this._applyIndex({ showOverlay: false, broadcast: true, reason });
+      }
+      get index() { return this._index; }
+      get length() { return this._slides.length; }
+      goTo(i) { this._go(i, 'api'); }
+      next() { this._go(this._index + 1, 'api'); }
+      prev() { this._go(this._index - 1, 'api'); }
+      reset() { this._go(0, 'api'); }
+    }
+    if (!customElements.get('deck-stage')) customElements.define('deck-stage', DeckStage);
+  })();
+</script>
+
+<script>
+  if (window.lucide) lucide.createIcons();
+
+  const stage = document.querySelector('deck-stage');
+
+  function applyStep(slide, step) {
+    slide.dataset.currentStep = String(step);
+    slide.querySelectorAll('.reveal').forEach((el) => {
+      const elStep = parseInt(el.dataset.step || '1', 10);
+      el.classList.toggle('is-on', elStep <= step);
+    });
+    const marker = slide.querySelector('.act-marker .step-num');
+    if (marker) marker.textContent = String(step);
+  }
+
+  function resetAndEnter(slide) {
+    if (!slide) return;
+    slide.querySelectorAll('.reveal').forEach((el) => el.classList.remove('is-on'));
+    slide.dataset.currentStep = '0';
+    requestAnimationFrame(() => requestAnimationFrame(() => applyStep(slide, 1)));
+  }
+
+  // Update progress bar
+  stage.addEventListener('slidechange', (e) => {
+    const { index, total } = e.detail;
+    const pct = total > 1 ? (index / (total - 1)) * 100 : 100;
+    document.getElementById('progress-bar').style.width = pct + '%';
+    const slide = e.detail.slide;
+    if (slide) resetAndEnter(slide);
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    const slide = stage.querySelector(':scope > section[data-deck-active]');
+    if (!slide) return;
+    const total = parseInt(slide.dataset.steps || '1', 10);
+    const current = parseInt(slide.dataset.currentStep || '1', 10);
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      if (current < total) { applyStep(slide, current + 1); e.preventDefault(); e.stopImmediatePropagation(); }
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      if (current > 1) { applyStep(slide, current - 1); e.preventDefault(); e.stopImmediatePropagation(); }
+    }
+  }, true);
+
+  // Fullscreen button
+  const fsBtn = document.getElementById('fs-btn');
+  fsBtn.addEventListener('click', () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
+  });
+  document.addEventListener('fullscreenchange', () => {
+    fsBtn.setAttribute('data-fs', document.fullscreenElement ? '1' : '0');
+  });
+
+  // Init first slide
+  const firstSlide = stage.querySelector(':scope > section');
+  if (firstSlide) applyStep(firstSlide, 1);
+</script>
+
+</body>
+</html>
