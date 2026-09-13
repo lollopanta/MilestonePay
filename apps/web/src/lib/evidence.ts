@@ -48,7 +48,7 @@ export async function getEvidenceClient() {
   return createEvidenceClient(client as SwarmActClient)
 }
 
-const apiUrl = (path: string) => `${(import.meta.env.VITE_API_URL || "http://localhost:3001").replace(/\/$/, "")}${path}`
+const apiUrl = (path: string) => `${(import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "")}${path}`
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(apiUrl(path), { headers: { "content-type": "application/json" }, ...init })

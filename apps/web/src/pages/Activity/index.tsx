@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { ProtocolEvent } from "@/features/activity/presentation"
 
 const baseUrl = (
-  import.meta.env.VITE_API_URL || "http://localhost:3001"
+  import.meta.env.VITE_API_URL || "/api"
 ).replace(/\/$/, "")
 
 async function getHistory(address: string, signal?: AbortSignal) {

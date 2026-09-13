@@ -9,7 +9,7 @@ import { validateAgreementEvidenceIdentity, validateArbiterSwarmIdentity, valida
 export function buildApp(arkivBlockNumber = getArkivBlockNumber, dependencies?: { repo: ArkivRepository; reader: AvalancheReader }) {
   const app = Fastify({ logger: true })
   app.register(cors, {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (process.env.CORS_ORIGIN || 'http://localhost:5173').split(','),
   })
   app.get('/health', async () => ({ status: 'ok' }))
   app.get('/arkiv/health', async (_request, reply) => {

@@ -17,7 +17,7 @@ export type Reputation = {
 }
 
 const baseUrl = (
-  import.meta.env.VITE_API_URL || "http://localhost:3001"
+  import.meta.env.VITE_API_URL || "/api"
 ).replace(/\/$/, "")
 
 const record = (value: unknown): Record<string, unknown> =>

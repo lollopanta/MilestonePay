@@ -44,7 +44,7 @@ type Reputation = {
 }
 
 const apiUrl = (path: string) =>
-  `${(import.meta.env.VITE_API_URL || "http://localhost:3001").replace(/\/$/, "")}${path}`
+  `${(import.meta.env.VITE_API_URL || "/api").replace(/\/$/, "")}${path}`
 
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(apiUrl(path))
