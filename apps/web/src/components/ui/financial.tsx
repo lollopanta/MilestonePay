@@ -71,9 +71,10 @@ export function Amount({
 
 export function WalletAddress({
   address,
+  compact = true,
   className,
   ...props
-}: { address?: string; className?: string } & ComponentProps<"span">) {
+}: { address?: string; compact?: boolean; className?: string } & ComponentProps<"span">) {
   const ensAddress = address && isAddress(address) ? address : undefined
   const { data: ensName } = useEnsName({
     address: ensAddress,
@@ -94,7 +95,7 @@ export function WalletAddress({
       title={ensName ? `${ensName} · ${address}` : address}
       {...props}
     >
-      {ensName ?? `${address.slice(0, 6)}…${address.slice(-4)}`}
+      {compact ? ensName ?? `${address.slice(0, 6)}…${address.slice(-4)}` : address}
     </span>
   )
 }
