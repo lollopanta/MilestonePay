@@ -4,7 +4,7 @@ import { avalancheFuji } from "wagmi/chains"
 
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { getSwarmIdClient } from "@/lib/evidence"
+import { getSwarmIdClient, secureAppUrl } from "@/lib/evidence"
 
 type AccountStep = "idle" | "wallet" | "network" | "swarm" | "error"
 const shorten = (address: string) =>
@@ -27,6 +27,11 @@ export function WalletButton() {
     if (isSwarmConnected) {
       disconnect()
       setSwarmConnected(false)
+      return
+    }
+
+    if (window.location.protocol !== "https:") {
+      window.location.assign(secureAppUrl())
       return
     }
 

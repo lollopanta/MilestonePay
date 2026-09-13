@@ -40,6 +40,13 @@ export function swarmIdConnectUrl() {
   return `${swarmIdOrigin}/connect#${query}`
 }
 
+export function secureAppUrl() {
+  const url = new URL(window.location.href)
+  url.protocol = "https:"
+  url.port = "5174"
+  return url.toString()
+}
+
 export async function getEvidenceReaderClient() {
   const client = await getSwarmIdClient()
   if (!client.connectionInfo.identity) throw new Error("Connect Swarm ID before protecting private content")
