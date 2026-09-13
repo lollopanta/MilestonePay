@@ -50,6 +50,7 @@ import { agreementIdentities, bindAgreementIdentity, currentSwarmPublicKey, disp
 import { decodeMilestoneEvidenceBundle, disputeEvidenceSealMessage, evidenceIdentityMessage, MAX_EVIDENCE_ATTACHMENT_BYTES } from "@milestonepay/evidence"
 import { wagmiConfig } from "@/web3/config"
 import { contracts } from "@/web3/contracts"
+import { ChatPanel } from "@/features/chat/chat-panel"
 
 const dealLabels = [
   "Awaiting funding",
@@ -929,6 +930,10 @@ export function Deal() {
               <CardFooter><Button variant="outline" disabled={actionPending} onClick={bindProviderIdentity}>Connect private identity</Button></CardFooter>
             </Card>
           )}
+          <Card size="sm">
+            <CardHeader><CardTitle>Private chat</CardTitle></CardHeader>
+            <CardContent><ChatPanel escrow={escrowAddress} chainId={avalancheFuji.id} wallet={wallet} role={activeRole.toLowerCase() as "client" | "provider" | "arbiter" | "observer"} /></CardContent>
+          </Card>
           {data.status === 1 && (
             <Card size="sm">
               <CardHeader>

@@ -35,6 +35,11 @@ export function getSwarmIdClient() {
   return swarmIdPromise
 }
 
+export async function getEvidenceReaderClient() {
+  const client = await getSwarmIdClient()
+  if (!client.connectionInfo.identity) throw new Error("Connect Swarm ID before protecting private content")
+  return createEvidenceClient(client as SwarmActClient)
+}
 export async function getEvidenceClient() {
   const client = await getSwarmIdClient()
   if (!client.connectionInfo.identity) throw new Error("Connect Swarm ID before protecting private content")

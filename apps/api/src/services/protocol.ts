@@ -1,7 +1,7 @@
-import { canonicalizeAgreementEvidenceIdentity, canonicalizeEvidenceDescriptor, canonicalizeDisputeEvidenceSnapshot, hashAgreementEvidenceIdentity, hashEvidenceDescriptor, hashDisputeEvidenceSnapshot, verifyAgreementEvidenceIdentity, verifyDisputeEvidenceSeal, type AgreementEvidenceIdentityV1, type DisputeEvidenceSealV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "@milestonepay/evidence"
+import { canonicalizeAgreementEvidenceIdentity, canonicalizeChatFeedBinding, canonicalizeEvidenceDescriptor, canonicalizeDisputeEvidenceSnapshot, chatFeedTopic, verifyChatFeedBinding, hashAgreementEvidenceIdentity, hashEvidenceDescriptor, hashDisputeEvidenceSnapshot, verifyAgreementEvidenceIdentity, verifyDisputeEvidenceSeal, type AgreementChatFeedBindingV1, type AgreementEvidenceIdentityV1, type DisputeEvidenceSealV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "@milestonepay/evidence"
 import { calculateReputation, type Address as ReputationAddress, type ReputationHistory } from "@milestonepay/reputation"
 import { isAddress, type Address, type Hex } from "viem"
-import { getAgreementIdentities, getAgreementIdentity, getDeal, getDisputeEvidenceForDispute, getDisputeEvidenceForSource, getEvidenceDescriptor, getWalletDisputes, getWalletHistory, getWalletSettlements } from "../arkiv/queries.js"
+import { getAgreementIdentities, getAgreementIdentity, getChatFeed, getChatFeeds, getDeal, getDisputeEvidenceForDispute, getDisputeEvidenceForSource, getEvidenceDescriptor, getWalletDisputes, getWalletHistory, getWalletSettlements } from "../arkiv/queries.js"
 import { jsonSafe } from "../arkiv/schema.js"
 import type { ArkivRepository } from "../arkiv/writer.js"
 import type { AvalancheReader } from "../indexer/avalanche.js"
@@ -66,6 +66,25 @@ export class ProtocolService {
     const provider = await getAgreementIdentity(this.repo, escrow, "provider")
     if (!client || !arbiter) throw new ProtocolError(404, "Agreement Swarm identities have not been bound")
     return { client: { commitment: client.attributes.commitment, binding: client.payload }, ...(provider ? { provider: { commitment: provider.attributes.commitment, binding: provider.payload } } : {}), arbiter: { commitment: arbiter.attributes.commitment, binding: arbiter.payload } }
+  }
+  async chatFeeds(escrow: Address) {
+    if (!await this.reader.isEscrow(escrow)) throw new ProtocolError(404, "Deal not found")
+    const [client, provider] = await getChatFeeds(this.repo, escrow)
+    return { ...(client ? { client: client.payload } : {}), ...(provider ? { provider: provider.payload } : {}) }
+  }
+  async bindChatFeed(binding: AgreementChatFeedBindingV1) {
+    if (binding.chainId !== this.reader.chainId || !await this.reader.isEscrow(binding.escrow)) throw new ProtocolError(404, "Canonical deal not found")
+    if (!await verifyChatFeedBinding(binding)) throw new ProtocolError(400, "Invalid signed chat feed binding")
+    const state = await this.reader.readEscrow(binding.escrow)
+    const expected = binding.role === "client" ? state.client : state.provider
+    if (lower(binding.wallet) !== lower(expected) || lower(binding.topic) !== lower(chatFeedTopic(binding.chainId, binding.escrow, binding.role))) throw new ProtocolError(400, "Chat feed does not belong to the agreement role")
+    const existing = await getChatFeed(this.repo, binding.escrow, binding.role)
+    if (existing) {
+      if (canonicalizeChatFeedBinding(existing.payload as AgreementChatFeedBindingV1) !== canonicalizeChatFeedBinding(binding)) throw new ProtocolError(409, "Chat feed is already bound")
+      return existing.payload
+    }
+    await this.repo.put({ type: "agreement_chat_feed", attributes: { feed_id: `${binding.escrow.toLowerCase()}:${binding.role}`, escrow: binding.escrow.toLowerCase(), role: binding.role, wallet: binding.wallet.toLowerCase(), feed_owner: binding.feedOwner.toLowerCase(), topic: binding.topic.toLowerCase() }, payload: binding })
+    return binding
   }
   async registerDisputeEvidence(seal: DisputeEvidenceSealV1) {
     const { snapshot } = seal

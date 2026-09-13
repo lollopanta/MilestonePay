@@ -5,6 +5,8 @@ export const getDeal = async (repo: ArkivRepository, escrow: Address) => latest(
 export const getEvidenceDescriptor = async (repo: ArkivRepository, hash: Hex) => latest(await repo.find("evidence", "evidence_hash", hash.toLowerCase()))
 export const getAgreementIdentity = async (repo: ArkivRepository, escrow: Address, role: "client" | "provider" | "arbiter") => (await repo.find("agreement_identity", "identity_id", `${escrow.toLowerCase()}:${role}`)).at(0)
 export const getAgreementIdentities = async (repo: ArkivRepository, escrow: Address) => Promise.all([getAgreementIdentity(repo, escrow, "client"), getAgreementIdentity(repo, escrow, "arbiter")])
+export const getChatFeed = async (repo: ArkivRepository, escrow: Address, role: "client" | "provider") => (await repo.find("agreement_chat_feed", "feed_id", `${escrow.toLowerCase()}:${role}`)).at(0)
+export const getChatFeeds = async (repo: ArkivRepository, escrow: Address) => Promise.all([getChatFeed(repo, escrow, "client"), getChatFeed(repo, escrow, "provider")])
 export const getDisputeEvidence = async (repo: ArkivRepository, hash: Hex) => latest(await repo.find("dispute_evidence", "evidence_hash", hash.toLowerCase()))
 export const getDisputeEvidenceForSource = async (repo: ArkivRepository, escrow: Address, milestoneId: number, sourceEvidenceHash: Hex, arbiterCommitment: Hex) => latest(await repo.find("dispute_evidence", "snapshot_id", `${escrow.toLowerCase()}:${milestoneId}:${sourceEvidenceHash.toLowerCase()}:${arbiterCommitment.toLowerCase()}`))
 export const getDisputeEvidenceForDispute = async (repo: ArkivRepository, escrow: Address, milestoneId: number) => repo.find("dispute_evidence", "dispute_id", `${escrow.toLowerCase()}:${milestoneId}`)

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { privateKeyToAccount } from "viem/accounts"
-import { canonicalizeAgreementEvidenceIdentity, canonicalizeDisputeEvidenceSnapshot, canonicalizeEvidenceDescriptor, createEvidenceClient, decodeMilestoneEvidenceBundle, encodeMilestoneEvidenceBundle, evidenceIdentityMessage, hashAgreementEvidenceIdentity, hashDisputeEvidenceSnapshot, hashEvidenceDescriptor, sha256, validateEvidenceDescriptor, verifyAgreementEvidenceIdentity, type AgreementEvidenceIdentityV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "./index.js"
+import { canonicalizeAgreementEvidenceIdentity, canonicalizeDisputeEvidenceSnapshot, canonicalizeEvidenceDescriptor, chatFeedBindingMessage, chatFeedTopic, createChatMessage, createEvidenceClient, decodeMilestoneEvidenceBundle, encodeMilestoneEvidenceBundle, evidenceIdentityMessage, hashAgreementEvidenceIdentity, hashDisputeEvidenceSnapshot, hashEvidenceDescriptor, sha256, validateChatMessage, validateEvidenceDescriptor, verifyAgreementEvidenceIdentity, type AgreementEvidenceIdentityV1, type DisputeEvidenceSnapshotV1, type EvidenceDescriptorV1 } from "./index.js"
 
 const descriptor: EvidenceDescriptorV1 = { version: 1, kind: "milestone", chainId: 43113, escrow: "0x0000000000000000000000000000000000000001", milestoneId: 0, act: { encryptedReference: "a".repeat(64), historyReference: "b".repeat(64), publisherPublicKey: `02${"c".repeat(64)}`, actReference: "d".repeat(64) }, createdAt: 1_700_000_000 }
 
@@ -70,4 +70,17 @@ test("private delivery bundles preserve notes, multiple files, integrity, and le
   assert.deepEqual(decoded.attachments.map((file) => file.name), [".._first.txt", "second.txt"])
   assert.equal((await decodeMilestoneEvidenceBundle(new TextEncoder().encode("old text-only note"))).note, "old text-only note")
   await assert.rejects(() => decodeMilestoneEvidenceBundle(new TextEncoder().encode('{"version":1,"note":"x","attachments":[{"name":"x","type":"text/plain","data":"eA==","sha256":"' + "0".repeat(64) + '"}]}')))
+})
+
+test("chat topic and message commitment are deterministic", async () => {
+  const account = privateKeyToAccount(`0x${"5".repeat(64)}`)
+  const topic = chatFeedTopic(43113, descriptor.escrow, "client")
+  assert.equal(topic, chatFeedTopic(43113, descriptor.escrow, "client"))
+  assert.notEqual(topic, chatFeedTopic(43113, descriptor.escrow, "provider"))
+  const message = createChatMessage({ version: 1, chainId: 43113, escrow: descriptor.escrow, sender: account.address, senderRole: "client", createdAt: 1, text: "private" })
+  validateChatMessage(message)
+  assert.throws(() => validateChatMessage({ ...message, text: "altered" }))
+  const binding = { version: 1 as const, chainId: 43113, escrow: descriptor.escrow, role: "client" as const, wallet: account.address, feedOwner: account.address, topic }
+  const signature = await account.signMessage({ message: chatFeedBindingMessage(binding) })
+  assert.equal(typeof signature, "string")
 })

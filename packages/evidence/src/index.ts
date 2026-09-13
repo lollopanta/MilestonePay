@@ -13,6 +13,10 @@ export type EvidenceDescriptorV1 = {
   createdAt: number
 }
 export type AgreementIdentityRole = "client" | "provider" | "arbiter"
+export type ChatRole = "client" | "provider"
+export type AgreementChatFeedBindingV1 = { version: 1; chainId: number; escrow: Address; role: ChatRole; wallet: Address; feedOwner: Address; topic: Hex; signature: Hex }
+export type ChatMessageV1 = { version: 1; chainId: number; escrow: Address; sender: Address; senderRole: ChatRole; createdAt: number; messageId: Hex; text: string }
+export type ChatFeedEntryV1 = { version: 1; messageId: Hex; act: EvidenceDescriptorV1["act"] }
 export type AgreementEvidenceIdentityV1 = {
   version: 1
   chainId: number
@@ -53,6 +57,7 @@ const reference = /^[0-9a-f]{64,128}$/i
 const publicKey = /^(?:0x)?[0-9a-f]{66}$/i
 const kinds = new Set<EvidenceKind>(["milestone", "dispute-client", "dispute-provider"])
 const identityRoles = new Set<AgreementIdentityRole>(["client", "provider", "arbiter"])
+const chatRoles = new Set<ChatRole>(["client", "provider"])
 
 export const MAX_EVIDENCE_ATTACHMENT_BYTES = 10 * 1024 * 1024
 export type EvidenceAttachmentV1 = { name: string; type: string; bytes: Uint8Array; sha256: string }
@@ -92,6 +97,28 @@ export async function sha256(data: Uint8Array) {
   const digest = await crypto.subtle.digest("SHA-256", data as BufferSource)
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
 }
+
+export function chatFeedTopic(chainId: number, escrow: Address, role: ChatRole): Hex {
+  if (!Number.isSafeInteger(chainId) || chainId <= 0 || !isAddress(escrow) || !chatRoles.has(role)) throw new Error("Invalid chat feed topic")
+  return keccak256(toBytes(`milestonepay-chat-v1:${chainId}:${escrow.toLowerCase()}:${role}`))
+}
+export function chatFeedBindingMessage(value: Omit<AgreementChatFeedBindingV1, "signature">) {
+  validateChatFeedBinding({ ...value, signature: `0x${"0".repeat(130)}` })
+  return `MilestonePay Chat Feed v1\nchainId: ${value.chainId}\nescrow: ${value.escrow.toLowerCase()}\nrole: ${value.role}\nwallet: ${value.wallet.toLowerCase()}\nfeedOwner: ${value.feedOwner.toLowerCase()}\ntopic: ${value.topic.toLowerCase()}`
+}
+export function canonicalizeChatFeedBinding(value: AgreementChatFeedBindingV1) { validateChatFeedBinding(value); return `{"version":1,"chainId":${value.chainId},"escrow":${quoted(value.escrow.toLowerCase())},"role":${quoted(value.role)},"wallet":${quoted(value.wallet.toLowerCase())},"feedOwner":${quoted(value.feedOwner.toLowerCase())},"topic":${quoted(value.topic.toLowerCase())},"signature":${quoted(value.signature.toLowerCase())}}` }
+export function validateChatFeedBinding(value: unknown): asserts value is AgreementChatFeedBindingV1 {
+  const binding = value as AgreementChatFeedBindingV1
+  if (!binding || Object.keys(binding).length !== 8 || binding.version !== 1 || !Number.isSafeInteger(binding.chainId) || binding.chainId <= 0 || !isAddress(binding.escrow) || !chatRoles.has(binding.role) || !isAddress(binding.wallet) || !isAddress(binding.feedOwner) || !/^0x[0-9a-f]{64}$/i.test(binding.topic) || !/^0x[0-9a-f]{130}$/i.test(binding.signature) || binding.topic.toLowerCase() !== chatFeedTopic(binding.chainId, binding.escrow, binding.role).toLowerCase()) throw new Error("Invalid chat feed binding")
+}
+export async function verifyChatFeedBinding(value: AgreementChatFeedBindingV1) { validateChatFeedBinding(value); return verifyMessage({ address: value.wallet, message: chatFeedBindingMessage(value), signature: value.signature }) }
+export function canonicalizeChatMessage(value: Omit<ChatMessageV1, "messageId">) {
+  if (value.version !== 1 || !Number.isSafeInteger(value.chainId) || value.chainId <= 0 || !isAddress(value.escrow) || !isAddress(value.sender) || !chatRoles.has(value.senderRole) || !Number.isSafeInteger(value.createdAt) || value.createdAt <= 0 || typeof value.text !== "string" || !value.text.trim() || value.text.length > 4_000) throw new Error("Invalid private chat message")
+  return `{"version":1,"chainId":${value.chainId},"escrow":${quoted(value.escrow.toLowerCase())},"sender":${quoted(value.sender.toLowerCase())},"senderRole":${quoted(value.senderRole)},"createdAt":${value.createdAt},"text":${quoted(value.text)}}`
+}
+export function createChatMessage(value: Omit<ChatMessageV1, "messageId">): ChatMessageV1 { return { ...value, messageId: keccak256(toBytes(canonicalizeChatMessage(value))) } }
+export function validateChatMessage(value: unknown): asserts value is ChatMessageV1 { const message = value as ChatMessageV1; if (!message || !/^0x[0-9a-f]{64}$/i.test(message.messageId) || message.messageId.toLowerCase() !== keccak256(toBytes(canonicalizeChatMessage(message))).toLowerCase()) throw new Error("Invalid private chat message") }
+export function validateChatFeedEntry(value: unknown): asserts value is ChatFeedEntryV1 { const entry = value as ChatFeedEntryV1; if (!entry || Object.keys(entry).length !== 3 || entry.version !== 1 || !/^0x[0-9a-f]{64}$/i.test(entry.messageId)) throw new Error("Invalid chat feed entry"); validateEvidenceDescriptor({ version: 1, kind: "milestone", chainId: 1, escrow: "0x0000000000000000000000000000000000000001", milestoneId: 0, createdAt: 1, act: entry.act }) }
 
 function quoted(value: string) { return JSON.stringify(value) }
 function key(value: string) { return value.replace(/^0x/, "").toLowerCase() }
