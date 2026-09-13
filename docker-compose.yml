@@ -51,6 +51,8 @@ services:
       VITE_AVALANCHE_RPC: ${VITE_AVALANCHE_RPC:-}
       VITE_CHAIN_ID: ${VITE_CHAIN_ID:-43113}
       VITE_SWARM_ID_ORIGIN: ${VITE_SWARM_ID_ORIGIN:-https://swarm-id.snaha.net}
+      TLS_KEY_PATH: /tls/key.pem
+      TLS_CERT_PATH: /tls/cert.pem
     ports:
       - "5173:5173"
     volumes:
@@ -58,6 +60,7 @@ services:
       - ./apps/web/public:/app/apps/web/public
       - ./apps/web/index.html:/app/apps/web/index.html
       - ./apps/web/vite.config.ts:/app/apps/web/vite.config.ts
+      - ./.local-tls:/tls:ro
       # Keep workspace evidence exports current for Vite during development.
       - ./packages/evidence:/app/packages/evidence
     depends_on:

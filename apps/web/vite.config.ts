@@ -1,12 +1,18 @@
+import { existsSync, readFileSync } from "node:fs"
 import path from "path"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
+const key = process.env.TLS_KEY_PATH
+const cert = process.env.TLS_CERT_PATH
+const https = key && cert && existsSync(key) && existsSync(cert) ? { key: readFileSync(key), cert: readFileSync(cert) } : undefined
+
 // https://vite.dev/config/
 export default defineConfig({
   envDir: "../..",
   server: {
+    https,
     watch: { usePolling: true },
     proxy: {
       "/api": {
